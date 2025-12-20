@@ -39,6 +39,7 @@ The application currently includes the following features:
 4. [Implementation Roadmap](#implementation-roadmap)
 5. [Quick Wins](#quick-wins)
 6. [Detailed Issue Breakdown](#detailed-issue-breakdown)
+7. [Technical Notes & Known Issues](#technical-notes--known-issues)
 
 ---
 
@@ -2137,3 +2138,24 @@ The quick wins alone (taking ~2-3 hours total) would provide immediate value:
 - Better error messages for users
 
 Prioritize Phase 1 for a stable, secure foundation, then build out features in Phase 2 and polish in Phase 3.
+
+---
+
+## Technical Notes & Known Issues
+
+### 1. Strict Content Security Policy (CSP) Failure
+**Attempted Fix:** Implemented a strict CSP to improve security.
+**Result:** The application failed to load, displaying a blank screen.
+**Root Cause:** Messenger.com requires loading resources from multiple domains (including CDNs and subdomains) and executing inline scripts that were blocked by the strict policy.
+**Lesson:** A more permissive CSP is required for Messenger, or we must carefully analyze all network requests to whitelist specific domains.
+
+### 2. Database Corruption & File Locks
+**Issue:** Users reported `Failed to delete the database: Database IO error`.
+**Root Cause:** Running the development version (`electron .`) while the packaged application (`messenger.app`) was running in the background caused a race condition. Both instances attempted to access the same `userData` directory (`~/Library/Application Support/messenger`), leading to file locks on the SQLite database.
+**Resolution:** Terminated all zombie processes to release the file locks.
+**Prevention:** Implement a "Single Instance Lock" check at the very beginning of the app startup (before app ready) to ensure only one instance runs per user data directory.
+
+### 3. Cache Clearing Limitations
+**Attempted Fix:** Used `session.defaultSession.clearCache()` to resolve database corruption.
+**Result:** While it logged the user out, it did not resolve the underlying file lock issue causing the IO error.
+**Lesson:** Programmatic cache clearing is insufficient for resolving OS-level file locking issues. Process management is required.
