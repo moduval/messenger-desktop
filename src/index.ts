@@ -1,5 +1,5 @@
 import 'v8-compile-cache';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, dialog } from 'electron';
 import { WindowManager } from './services/window-manager';
 import { IpcHandlers } from './services/ipc-handlers';
 import { APP_CONFIG } from './config/constants';
@@ -19,18 +19,29 @@ if (!app.isPackaged) {
 }
 
 app.whenReady().then(() => {
-  if (process.platform === 'darwin') {
-    app.dock?.setIcon(APP_CONFIG.WINDOW.ICON_PATH);
-  }
-
-  WindowManager.create();
-  IpcHandlers.register();
-
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      WindowManager.create();
+  try {
+    if (process.platform === 'darwin') {
+      app.dock?.setIcon(APP_CONFIG.WINDOW.ICON_PATH);
     }
-  });
+
+    WindowManager.create();
+    IpcHandlers.register();
+
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        try {
+          WindowManager.create();
+        } catch (error) {
+          console.error('Failed to recreate window:', error);
+          dialog.showErrorBox('Error', 'Failed to create window. Please restart the app.');
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Failed to initialize app:', error);
+    dialog.showErrorBox('Startup Error', `Failed to start application: ${(error as Error).message}`);
+    app.quit();
+  }
 });
 
 app.on('window-all-closed', () => {

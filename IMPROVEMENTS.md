@@ -64,38 +64,6 @@ webPreferences: {
 
 ### Error Handling Gaps
 
-#### 7. No Error Handling in Window Creation
-- **File:** `src/index.ts:7-13`
-- **Severity:** High
-- **Issue:** The `WindowManager.create()` call has no error handling. If window creation fails, the app crashes silently.
-- **Recommendation:**
-```typescript
-app.whenReady().then(() => {
-  try {
-    if (process.platform === 'darwin') {
-      app.dock?.setIcon(APP_CONFIG.WINDOW.ICON_PATH);
-    }
-
-    WindowManager.create();
-    IpcHandlers.register();
-
-    app.on('activate', () => {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        try {
-          WindowManager.create();
-        } catch (error) {
-          console.error('Failed to recreate window:', error);
-          dialog.showErrorBox('Error', 'Failed to create window. Please restart the app.');
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Failed to initialize app:', error);
-    dialog.showErrorBox('Startup Error', `Failed to start application: ${error.message}`);
-    app.quit();
-  }
-});
-```
 
 #### 8. No Error Handling for Missing Preload Script
 - **File:** `src/services/window-manager.ts:20`
