@@ -68,34 +68,6 @@ webPreferences: {
 
 
 
-#### 11. No Error Handling in MutationObserver
-- **File:** `src/preload.ts:6-16`
-- **Severity:** Medium
-- **Issue:** The MutationObserver callback doesn't have error handling. Exceptions crash the renderer process.
-- **Recommendation:**
-```typescript
-static init(): void {
-  try {
-    const observer = new MutationObserver(() => {
-      try {
-        this.checkUnreadCount();
-      } catch (error) {
-        console.error('Badge detection error:', error);
-      }
-    });
-
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['aria-label'],
-      characterData: true
-    });
-  } catch (error) {
-    console.error('Failed to initialize badge observer:', error);
-  }
-}
-```
 
 #### 12. CSS Injection Without Error Handling
 - **File:** `src/utils/css-injector.ts:5`

@@ -10,7 +10,15 @@ class BadgeManager {
   private static readonly UNREAD_PATTERN = /Chats · (\d+) unread/;
 
   static init(): void {
-    const observer = new MutationObserver(() => this.checkUnreadCount());
+    try {
+      this.setupObserver();
+    } catch (error) {
+      console.error('Failed to initialize badge observer:', error);
+    }
+  }
+
+  private static setupObserver(): void {
+    const observer = new MutationObserver(() => this.handleMutation());
 
     observer.observe(document.body, {
       childList: true,
@@ -19,6 +27,14 @@ class BadgeManager {
       attributeFilter: ['aria-label'],
       characterData: true
     });
+  }
+
+  private static handleMutation(): void {
+    try {
+      this.checkUnreadCount();
+    } catch (error) {
+      console.error('Badge detection error:', error);
+    }
   }
 
   private static checkUnreadCount(): void {
