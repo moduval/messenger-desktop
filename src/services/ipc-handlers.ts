@@ -4,7 +4,7 @@ export class IpcHandlers {
   static register(): void {
     ipcMain.on('update-badge', (_event, count: unknown) => {
       try {
-        if (!this.isBadgeSupported()) {
+        if (!this.isBadgeSupported(app.dock)) {
           return;
         }
 
@@ -29,8 +29,8 @@ export class IpcHandlers {
     });
   }
 
-  private static isBadgeSupported(): boolean {
-    return process.platform === 'darwin' && !!app.dock;
+  private static isBadgeSupported(dock: Electron.Dock | undefined): dock is Electron.Dock {
+    return process.platform === 'darwin' && !!dock;
   }
 
   private static isValidBadgeCountType(count: unknown): boolean {
