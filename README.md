@@ -7,8 +7,7 @@ A lightweight, native-feeling desktop wrapper for [Messenger.com](https://www.me
 - **Native Experience**: Runs as a standalone desktop application.
 - **Clean UI**: Automatically hides "Install App" banners and scrollbars for a clutter-free experience.
 - **Dock Badges**: Supports unread message count badges on the macOS Dock.
-- **External Links**: Opens external links in your default web browser, keeping the chat window focused.
-- **Security**: Implements Content Security Policy (CSP) for safer browsing.
+
 
 ## Prerequisites
 
@@ -51,9 +50,12 @@ The build artifacts will be stored in the `out/` and `dist/` directories (depend
 
 ## Project Structure
 
-- `src/index.ts`: Main process entry point. Handles window creation, CSP, and app lifecycle.
+- `src/index.ts`: Main process entry point.
+- `src/config/`: Configuration constants.
+- `src/services/`: Core services (Window management, IPC).
+- `src/utils/`: Utility functions (CSS injection).
 - `src/preload.ts`: Preload script for secure IPC communication.
-- `assets/`: Contains application icons and other static assets.
+
 
 ## Disclaimer
 
