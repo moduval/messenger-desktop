@@ -38,6 +38,14 @@ export class WindowManager {
       return { action: 'deny' };
     });
 
+    // Handle internal navigation
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!this.isAllowedUrl(url)) {
+        event.preventDefault();
+        this.handleExternalLink(url);
+      }
+    });
+
     win.on('closed', () => {
       this.instance = null;
     });

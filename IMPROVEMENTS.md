@@ -11,7 +11,7 @@ This document contains a thorough analysis of improvement opportunities for the 
 ## Executive Summary
 
 The messenger-desktop application has a solid foundation but requires significant improvements in:
-- **Security** (4 critical vulnerabilities)
+- **Security** (3 critical vulnerabilities)
 - **Error Handling** (6 major gaps causing silent failures)
 - **Performance** (badge detection does full DOM scan on every mutation)
 - **Cross-platform Support** (badge detection only works on macOS)
@@ -59,13 +59,7 @@ webPreferences: {
 ```
 
 
-#### 2. No Protocol Validation
-- **File:** `src/services/window-manager.ts:35`
-- **Severity:** High
-- **Issue:** Links with `javascript:`, `data:`, or `file://` protocols could theoretically be processed.
-- **Recommendation:** Explicitly check for `http://` or `https://` protocols before allowing external opens (see fix above).
-
-#### 3. No Session Isolation
+#### 2. No Session Isolation
 - **File:** `src/services/window-manager.ts`
 - **Severity:** Medium
 - **Issue:** The window uses the default session, meaning cookies are shared with system browser.
@@ -84,7 +78,7 @@ const win = new BrowserWindow({
 ```
 
 
-#### 4. Unsafe Window Object Extension
+#### 3. Unsafe Window Object Extension
 - **File:** `src/preload.ts`
 - **Severity:** Medium
 - **Issue:** The preload script doesn't use `contextBridge` to expose APIs safely.
