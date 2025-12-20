@@ -15,6 +15,7 @@ export class WindowManager {
       height: APP_CONFIG.WINDOW.HEIGHT,
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
+        sandbox: true,
         nodeIntegration: false,
         contextIsolation: true,
         preload: APP_CONFIG.PATHS.PRELOAD,
@@ -32,7 +33,7 @@ export class WindowManager {
       if (url.startsWith(APP_CONFIG.URLS.MESSENGER)) {
         return { action: 'allow' };
       }
-      shell.openExternal(url);
+      void shell.openExternal(url);
       return { action: 'deny' };
     });
 

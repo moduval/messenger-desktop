@@ -11,7 +11,7 @@ This document contains a thorough analysis of improvement opportunities for the 
 ## Executive Summary
 
 The messenger-desktop application has a solid foundation but requires significant improvements in:
-- **Security** (6 critical vulnerabilities)
+- **Security** (5 critical vulnerabilities)
 - **Error Handling** (6 major gaps causing silent failures)
 - **Performance** (badge detection does full DOM scan on every mutation)
 - **Cross-platform Support** (badge detection only works on macOS)
@@ -58,21 +58,8 @@ webPreferences: {
 }
 ```
 
-#### 2. Missing Sandbox Enforcement
-- **File:** `src/services/window-manager.ts`
-- **Severity:** Critical
-- **Issue:** While `nodeIntegration: false` is set, the `sandbox` option is not explicitly enabled.
-- **Recommendation:**
-```typescript
-webPreferences: {
-  sandbox: true,
-  nodeIntegration: false,
-  contextIsolation: true,
-  preload: APP_CONFIG.PATHS.PRELOAD,
-}
-```
 
-#### 3. Vulnerable External Link Validation
+#### 2. Vulnerable External Link Validation
 - **File:** `src/services/window-manager.ts:31-36`
 - **Severity:** Critical
 - **Issue:** The check `url.startsWith(APP_CONFIG.URLS.MESSENGER)` uses simple string matching. A malicious link like `https://www.messenger.com.evil.com` would match and open in-app.
@@ -115,13 +102,13 @@ win.webContents.setWindowOpenHandler(({ url }) => {
 });
 ```
 
-#### 4. No Protocol Validation
+#### 3. No Protocol Validation
 - **File:** `src/services/window-manager.ts:35`
 - **Severity:** High
 - **Issue:** Links with `javascript:`, `data:`, or `file://` protocols could theoretically be processed.
 - **Recommendation:** Explicitly check for `http://` or `https://` protocols before allowing external opens (see fix above).
 
-#### 5. No Session Isolation
+#### 4. No Session Isolation
 - **File:** `src/services/window-manager.ts`
 - **Severity:** Medium
 - **Issue:** The window uses the default session, meaning cookies are shared with system browser.
@@ -139,7 +126,7 @@ const win = new BrowserWindow({
 });
 ```
 
-#### 6. Unsafe Window Object Extension
+
 - **File:** `src/preload.ts`
 - **Severity:** Medium
 - **Issue:** The preload script doesn't use `contextBridge` to expose APIs safely.
