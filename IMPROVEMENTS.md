@@ -67,43 +67,6 @@ webPreferences: {
 
 
 
-#### 10. Missing Error Context in IPC Communication
-- **File:** `src/services/ipc-handlers.ts:5`
-- **Severity:** Medium
-- **Issue:** No validation that `count` parameter is valid before calling `toString()`.
-- **Recommendation:**
-```typescript
-static register(): void {
-  ipcMain.on('update-badge', (_event, count) => {
-    try {
-      if (process.platform !== 'darwin' || !app.dock) {
-        return;
-      }
-
-      // Validate input
-      if (count !== null && count !== undefined && typeof count !== 'string' && typeof count !== 'number') {
-        console.error('Invalid badge count type:', typeof count);
-        return;
-      }
-
-      if (count) {
-        const badgeString = String(count);
-        // Validate it's a reasonable number
-        const num = parseInt(badgeString, 10);
-        if (isNaN(num) || num < 0 || num > 9999) {
-          console.error('Invalid badge count value:', badgeString);
-          return;
-        }
-        app.dock.setBadge(badgeString);
-      } else {
-        app.dock.setBadge('');
-      }
-    } catch (error) {
-      console.error('Failed to update badge:', error);
-    }
-  });
-}
-```
 
 #### 11. No Error Handling in MutationObserver
 - **File:** `src/preload.ts:6-16`

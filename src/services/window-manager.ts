@@ -49,23 +49,7 @@ export class WindowManager {
       });
     });
 
-    // Handle external links
-    win.webContents.setWindowOpenHandler(({ url }) => {
-      if (this.isAllowedUrl(url)) {
-        return { action: 'allow' };
-      }
-
-      this.handleExternalLink(url);
-      return { action: 'deny' };
-    });
-
-    // Handle internal navigation
-    win.webContents.on('will-navigate', (event, url) => {
-      if (!this.isAllowedUrl(url)) {
-        event.preventDefault();
-        this.handleExternalLink(url);
-      }
-    });
+    this.setupWindowHandlers(win);
 
     win.on('closed', () => {
       this.instance = null;
@@ -91,11 +75,30 @@ export class WindowManager {
     }
   }
 
+  private static setupWindowHandlers(win: BrowserWindow): void {
+    // Handle external links
+    win.webContents.setWindowOpenHandler(({ url }) => {
+      if (this.isAllowedUrl(url)) {
+        return { action: 'allow' };
+      }
+
+      this.handleExternalLink(url);
+      return { action: 'deny' };
+    });
+
+    // Handle internal navigation
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!this.isAllowedUrl(url)) {
+        event.preventDefault();
+        this.handleExternalLink(url);
+      }
+    });
+  }
+
   private static handleExternalLink(url: string): void {
     try {
       const urlObj = new URL(url);
-      // Only open http/https links externally
-      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+      if (this.isValidExternalProtocol(urlObj.protocol)) {
         shell.openExternal(url).catch(err => {
           console.error('Failed to open external URL:', err);
         });
@@ -103,6 +106,10 @@ export class WindowManager {
     } catch (err) {
       console.error('Invalid external URL:', url, err);
     }
+  }
+
+  private static isValidExternalProtocol(protocol: string): boolean {
+    return protocol === 'http:' || protocol === 'https:';
   }
 
   private static validatePreloadScript(): void {
