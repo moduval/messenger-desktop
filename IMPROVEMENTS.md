@@ -65,23 +65,6 @@ webPreferences: {
 ### Error Handling Gaps
 
 
-#### 8. No Error Handling for Missing Preload Script
-- **File:** `src/services/window-manager.ts:20`
-- **Severity:** High
-- **Issue:** If the preload script doesn't exist, BrowserWindow creation fails with a cryptic error.
-- **Recommendation:**
-```typescript
-import * as fs from 'fs';
-
-static create(): BrowserWindow {
-  // Validate preload script exists
-  if (!fs.existsSync(APP_CONFIG.PATHS.PRELOAD)) {
-    throw new Error(`Preload script not found at ${APP_CONFIG.PATHS.PRELOAD}`);
-  }
-
-  // ... rest of window creation
-}
-```
 
 #### 9. No Promise Rejection Handling for URL Loading
 - **File:** `src/services/window-manager.ts:28`

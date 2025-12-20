@@ -1,6 +1,7 @@
 import { BrowserWindow, shell, session } from 'electron';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
+import * as fs from 'fs';
 
 export class WindowManager {
   private static instance: BrowserWindow | null = null;
@@ -9,6 +10,8 @@ export class WindowManager {
     if (this.instance) {
       return this.instance;
     }
+
+    this.validatePreloadScript();
 
     const messengerSession = session.fromPartition('persist:messenger');
 
@@ -84,6 +87,12 @@ export class WindowManager {
       }
     } catch (err) {
       console.error('Invalid external URL:', url, err);
+    }
+  }
+
+  private static validatePreloadScript(): void {
+    if (!fs.existsSync(APP_CONFIG.PATHS.PRELOAD)) {
+      throw new Error(`Preload script not found at ${APP_CONFIG.PATHS.PRELOAD}`);
     }
   }
 }
