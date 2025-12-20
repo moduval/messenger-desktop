@@ -1,4 +1,4 @@
-import { BrowserWindow, shell } from 'electron';
+import { BrowserWindow, shell, session } from 'electron';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
 
@@ -10,11 +10,14 @@ export class WindowManager {
       return this.instance;
     }
 
+    const messengerSession = session.fromPartition('persist:messenger');
+
     const win = new BrowserWindow({
       width: APP_CONFIG.WINDOW.WIDTH,
       height: APP_CONFIG.WINDOW.HEIGHT,
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
+        session: messengerSession,
         sandbox: true,
         nodeIntegration: false,
         contextIsolation: true,

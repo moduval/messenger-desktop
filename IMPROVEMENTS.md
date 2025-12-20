@@ -57,23 +57,6 @@ webPreferences: {
 ```
 
 
-#### 2. No Session Isolation
-- **File:** `src/services/window-manager.ts`
-- **Severity:** Medium
-- **Issue:** The window uses the default session, meaning cookies are shared with system browser.
-- **Recommendation:**
-```typescript
-import { session } from 'electron';
-
-const customSession = session.fromPartition('messenger', { cache: true });
-const win = new BrowserWindow({
-  // ...
-  webPreferences: {
-    session: customSession,
-    // ...
-  }
-});
-```
 
 
 #### 3. Unsafe Window Object Extension
