@@ -1,0 +1,37 @@
+{
+  "name": "messenger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "out/index.js",
+  "scripts": {
+    "start": "tsc && electron .",
+    "build": "tsc && electron-builder",
+    "build:win": "tsc && electron-builder --win --x64"
+  },
+  "build": {
+    "appId": "com.messenger.desktop",
+    "files": [
+      "out/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.social-networking",
+      "icon": "assets/icon.png",
+      "identity": null
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png"
+    }
+  },
+  "devDependencies": {
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.5.3"
+  },
+  "private": true,
+  "dependencies": {
+    "v8-compile-cache": "^2.4.0"
+  }
+}
