@@ -66,33 +66,6 @@ webPreferences: {
 
 
 
-#### 9. No Promise Rejection Handling for URL Loading
-- **File:** `src/services/window-manager.ts:28`
-- **Severity:** High
-- **Issue:** `win.loadURL()` returns a promise that can reject, but rejection is ignored.
-- **Current Code:**
-```typescript
-void win.loadURL(APP_CONFIG.URLS.MESSENGER);
-```
-- **Recommended Fix:**
-```typescript
-win.loadURL(APP_CONFIG.URLS.MESSENGER).catch(error => {
-  console.error('Failed to load Messenger:', error);
-  dialog.showMessageBox(win, {
-    type: 'error',
-    title: 'Connection Error',
-    message: 'Failed to load Messenger',
-    detail: 'Please check your internet connection and try again.',
-    buttons: ['Retry', 'Quit']
-  }).then(result => {
-    if (result.response === 0) {
-      win.loadURL(APP_CONFIG.URLS.MESSENGER);
-    } else {
-      app.quit();
-    }
-  });
-});
-```
 
 #### 10. Missing Error Context in IPC Communication
 - **File:** `src/services/ipc-handlers.ts:5`

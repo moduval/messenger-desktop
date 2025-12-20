@@ -1,4 +1,4 @@
-import { BrowserWindow, shell, session } from 'electron';
+import { BrowserWindow, shell, session, dialog, app } from 'electron';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
 import * as fs from 'fs';
@@ -32,7 +32,22 @@ export class WindowManager {
       CssInjector.injectCleanUi(win.webContents);
     });
 
-    void win.loadURL(APP_CONFIG.URLS.MESSENGER);
+    win.loadURL(APP_CONFIG.URLS.MESSENGER).catch(error => {
+      console.error('Failed to load Messenger:', error);
+      dialog.showMessageBox(win, {
+        type: 'error',
+        title: 'Connection Error',
+        message: 'Failed to load Messenger',
+        detail: 'Please check your internet connection and try again.',
+        buttons: ['Retry', 'Quit']
+      }).then(result => {
+        if (result.response === 0) {
+          win.loadURL(APP_CONFIG.URLS.MESSENGER);
+        } else {
+          app.quit();
+        }
+      });
+    });
 
     // Handle external links
     win.webContents.setWindowOpenHandler(({ url }) => {
