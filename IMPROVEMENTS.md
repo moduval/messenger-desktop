@@ -59,20 +59,6 @@ webPreferences: {
 
 
 
-#### 3. Unsafe Window Object Extension
-- **File:** `src/preload.ts`
-- **Severity:** Medium
-- **Issue:** The preload script doesn't use `contextBridge` to expose APIs safely.
-- **Recommendation:**
-```typescript
-import { contextBridge, ipcRenderer } from 'electron';
-
-contextBridge.exposeInMainWorld('messengerApi', {
-  updateBadge: (count: string | null) => {
-    ipcRenderer.send('update-badge', count);
-  }
-});
-```
 
 ---
 

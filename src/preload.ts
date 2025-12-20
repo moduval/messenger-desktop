@@ -1,4 +1,10 @@
-import { ipcRenderer } from 'electron';
+import { ipcRenderer, contextBridge } from 'electron';
+
+contextBridge.exposeInMainWorld('messengerApi', {
+  updateBadge: (count: string | null) => {
+    ipcRenderer.send('update-badge', count);
+  }
+});
 
 class BadgeManager {
   private static readonly UNREAD_PATTERN = /Chats · (\d+) unread/;
