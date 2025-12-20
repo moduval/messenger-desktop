@@ -12,7 +12,8 @@ A lightweight, native-feeling desktop wrapper for [Messenger.com](https://www.me
 
 ## Prerequisites
 
-- [Bun](https://bun.sh/) (v1.0 or higher)
+- [Node.js](https://nodejs.org/)
+- [npm](https://www.npmjs.com/)
 
 ## Getting Started
 
@@ -26,13 +27,13 @@ A lightweight, native-feeling desktop wrapper for [Messenger.com](https://www.me
 2. **Install dependencies**
 
    ```bash
-   bun install
+   npm install
    ```
 
 3. **Run the application**
 
    ```bash
-   bun start
+   npm start
    ```
 
 ## Building the Application
@@ -41,10 +42,10 @@ To build the application for production:
 
 ```bash
 # Build for your current OS
-bun run build
+npm run build
 
 # Build specifically for Windows (x64)
-bun run build:win
+npm run build:win
 ```
 
 The build artifacts will be stored in the `out/` and `dist/` directories (depending on electron-builder configuration).

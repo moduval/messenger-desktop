@@ -18,7 +18,11 @@
     "mac": {
       "category": "public.app-category.social-networking",
       "icon": "assets/icon.png",
-      "identity": null
+      "identity": null,
+      "target": [
+        "zip",
+        "dir"
+      ]
     },
     "win": {
       "target": "nsis",

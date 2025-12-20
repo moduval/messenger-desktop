@@ -1,5 +1,5 @@
 import 'v8-compile-cache';
-import { app, BrowserWindow, shell, ipcMain, session } from 'electron';
+import { app, BrowserWindow, shell, ipcMain } from 'electron';
 import * as path from 'path';
 
 function createWindow() {
@@ -53,18 +53,6 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Security: Set Content Security Policy (CSP)
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Content-Security-Policy': [
-          "default-src 'self' https://*.messenger.com https://*.facebook.com https://*.fbcdn.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.messenger.com https://*.facebook.com https://*.fbcdn.net; style-src 'self' 'unsafe-inline' https://*.messenger.com https://*.facebook.com https://*.fbcdn.net; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https: wss:;"
-        ]
-      }
-    });
-  });
-
   if (process.platform === 'darwin') {
     app.dock?.setIcon(path.join(__dirname, '../assets/icon.png'));
   }
