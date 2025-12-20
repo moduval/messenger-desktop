@@ -11,7 +11,7 @@ This document contains a thorough analysis of improvement opportunities for the 
 ## Executive Summary
 
 The messenger-desktop application has a solid foundation but requires significant improvements in:
-- **Security** (5 critical vulnerabilities)
+- **Security** (4 critical vulnerabilities)
 - **Error Handling** (6 major gaps causing silent failures)
 - **Performance** (badge detection does full DOM scan on every mutation)
 - **Cross-platform Support** (badge detection only works on macOS)
@@ -59,56 +59,13 @@ webPreferences: {
 ```
 
 
-#### 2. Vulnerable External Link Validation
-- **File:** `src/services/window-manager.ts:31-36`
-- **Severity:** Critical
-- **Issue:** The check `url.startsWith(APP_CONFIG.URLS.MESSENGER)` uses simple string matching. A malicious link like `https://www.messenger.com.evil.com` would match and open in-app.
-- **Current Code:**
-```typescript
-win.webContents.setWindowOpenHandler(({ url }) => {
-  if (url.startsWith(APP_CONFIG.URLS.MESSENGER)) {
-    return { action: 'allow' };
-  }
-  shell.openExternal(url);
-  return { action: 'deny' };
-});
-```
-- **Recommended Fix:**
-```typescript
-win.webContents.setWindowOpenHandler(({ url }) => {
-  try {
-    const urlObj = new URL(url);
-    const hostname = urlObj.hostname;
-
-    // Validate protocol
-    if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') {
-      return { action: 'deny' };
-    }
-
-    // Check if it's a messenger domain
-    if (hostname === 'www.messenger.com' || hostname.endsWith('.messenger.com')) {
-      return { action: 'allow' };
-    }
-
-    // Open external links in system browser
-    shell.openExternal(url).catch(err => {
-      console.error('Failed to open external URL:', err);
-    });
-    return { action: 'deny' };
-  } catch (err) {
-    console.error('Invalid URL:', url, err);
-    return { action: 'deny' };
-  }
-});
-```
-
-#### 3. No Protocol Validation
+#### 2. No Protocol Validation
 - **File:** `src/services/window-manager.ts:35`
 - **Severity:** High
 - **Issue:** Links with `javascript:`, `data:`, or `file://` protocols could theoretically be processed.
 - **Recommendation:** Explicitly check for `http://` or `https://` protocols before allowing external opens (see fix above).
 
-#### 4. No Session Isolation
+#### 3. No Session Isolation
 - **File:** `src/services/window-manager.ts`
 - **Severity:** Medium
 - **Issue:** The window uses the default session, meaning cookies are shared with system browser.
@@ -127,6 +84,7 @@ const win = new BrowserWindow({
 ```
 
 
+#### 4. Unsafe Window Object Extension
 - **File:** `src/preload.ts`
 - **Severity:** Medium
 - **Issue:** The preload script doesn't use `contextBridge` to expose APIs safely.

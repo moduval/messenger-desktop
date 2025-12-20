@@ -30,10 +30,11 @@ export class WindowManager {
 
     // Handle external links
     win.webContents.setWindowOpenHandler(({ url }) => {
-      if (url.startsWith(APP_CONFIG.URLS.MESSENGER)) {
+      if (this.isAllowedUrl(url)) {
         return { action: 'allow' };
       }
-      void shell.openExternal(url);
+
+      this.handleExternalLink(url);
       return { action: 'deny' };
     });
 
@@ -43,5 +44,35 @@ export class WindowManager {
 
     this.instance = win;
     return win;
+  }
+
+  private static isAllowedUrl(url: string): boolean {
+    try {
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname;
+
+      if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') {
+        return false;
+      }
+
+      return hostname === 'www.messenger.com' || hostname.endsWith('.messenger.com');
+    } catch (err) {
+      console.error('Invalid URL:', url, err);
+      return false;
+    }
+  }
+
+  private static handleExternalLink(url: string): void {
+    try {
+      const urlObj = new URL(url);
+      // Only open http/https links externally
+      if (urlObj.protocol === 'http:' || urlObj.protocol === 'https:') {
+        shell.openExternal(url).catch(err => {
+          console.error('Failed to open external URL:', err);
+        });
+      }
+    } catch (err) {
+      console.error('Invalid external URL:', url, err);
+    }
   }
 }
