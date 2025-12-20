@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('messengerApi', {
   }
 });
 
-class BadgeManager {
+export class BadgeManager {
   private static readonly UNREAD_PATTERN = /Chats · (\d+) unread/;
 
   static init(): void {
