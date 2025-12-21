@@ -2,8 +2,10 @@ import { BrowserWindow, shell, session, dialog, app, Tray, Menu, nativeImage } f
 import Store from 'electron-store';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
+import { ErrorUtils } from '../utils/error-utils';
 import { SplashScreen } from './splash-screen';
 import * as fs from 'fs';
+import * as path from 'path';
 
 interface WindowState {
   width: number;
@@ -43,7 +45,7 @@ export class WindowManager {
 
     SplashScreen.show();
 
-    const win = new BrowserWindow({
+    const browserWindow = new BrowserWindow({
       width: savedState.width,
       height: savedState.height,
       x: savedState.x,
@@ -52,7 +54,7 @@ export class WindowManager {
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
         session: messengerSession,
-        sandbox: true,
+        sandbox: false,
         nodeIntegration: false,
         contextIsolation: true,
         preload: APP_CONFIG.PATHS.PRELOAD
@@ -60,54 +62,56 @@ export class WindowManager {
     });
 
     if (savedState.isMaximized) {
-      win.maximize();
+      browserWindow.maximize();
     }
 
-    win.once('ready-to-show', () => {
+    browserWindow.once('ready-to-show', () => {
       SplashScreen.close();
-      win.show();
-      win.focus();
+      browserWindow.show();
+      browserWindow.focus();
     });
 
-    win.webContents.on('did-finish-load', () => {
-      CssInjector.injectCleanUi(win.webContents);
+    browserWindow.webContents.on('did-finish-load', () => {
+      SplashScreen.close();
+      CssInjector.injectCleanUi(browserWindow.webContents);
     });
 
-    win.loadURL(APP_CONFIG.URLS.MESSENGER).catch((error) => {
+    browserWindow.webContents.on(
+      'did-fail-load',
+      (_event, errorCode, errorDescription, _validatedURL, isMainFrame) => {
+        if (!isMainFrame) return;
+
+        console.error('Failed to load:', errorCode, errorDescription);
+        if (ErrorUtils.isOfflineError(errorCode)) {
+          void browserWindow.loadFile(path.join(APP_CONFIG.PATHS.ASSETS, 'offline.html'));
+        }
+      }
+    );
+
+    browserWindow.loadURL(APP_CONFIG.URLS.MESSENGER).catch((error) => {
+      if (ErrorUtils.isAbortedError(error)) {
+        return;
+      }
       console.error('Failed to load Messenger:', error);
-      dialog
-        .showMessageBox(win, {
-          type: 'error',
-          title: 'Connection Error',
-          message: 'Failed to load Messenger',
-          detail: 'Please check your internet connection and try again.',
-          buttons: ['Retry', 'Quit']
-        })
-        .then((result) => {
-          if (result.response === 0) {
-            win.loadURL(APP_CONFIG.URLS.MESSENGER);
-          } else {
-            app.quit();
-          }
-        });
     });
 
-    this.setupWindowHandlers(win);
+    this.handleExternalLinks(browserWindow);
+    this.handleInternalNavigation(browserWindow);
 
-    win.on('close', (event) => {
+    browserWindow.on('close', (event) => {
       if (!isQuitting && process.platform !== 'darwin') {
         event.preventDefault();
-        win.hide();
+        browserWindow.hide();
       }
-      this.saveWindowState(win);
+      this.saveWindowState(browserWindow);
     });
 
-    win.on('closed', () => {
+    browserWindow.on('closed', () => {
       this.cleanup();
     });
 
-    this.instance = win;
-    return win;
+    this.instance = browserWindow;
+    return browserWindow;
   }
 
   private static saveWindowState(win: BrowserWindow): void {
@@ -146,8 +150,16 @@ export class WindowManager {
     }
   }
 
-  private static setupWindowHandlers(win: BrowserWindow): void {
-    // Handle external links
+  private static handleInternalNavigation(win: Electron.CrossProcessExports.BrowserWindow) {
+    win.webContents.on('will-navigate', (event, url) => {
+      if (!this.isAllowedUrl(url)) {
+        event.preventDefault();
+        this.handleExternalLink(url);
+      }
+    });
+  }
+
+  private static handleExternalLinks(win: Electron.CrossProcessExports.BrowserWindow) {
     win.webContents.setWindowOpenHandler(({ url }) => {
       if (this.isAllowedUrl(url)) {
         return { action: 'allow' };
@@ -155,14 +167,6 @@ export class WindowManager {
 
       this.handleExternalLink(url);
       return { action: 'deny' };
-    });
-
-    // Handle internal navigation
-    win.webContents.on('will-navigate', (event, url) => {
-      if (!this.isAllowedUrl(url)) {
-        event.preventDefault();
-        this.handleExternalLink(url);
-      }
     });
   }
 
