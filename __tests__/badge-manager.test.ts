@@ -1,14 +1,16 @@
-import { waitFor } from '@testing-library/dom';
 import { BadgeManager } from '../src/services/badge-manager';
+import { waitFor } from '@testing-library/dom';
 
 describe('BadgeManager', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
+    jest.useFakeTimers();
   });
 
   afterEach(() => {
     BadgeManager.destroy();
     jest.clearAllMocks();
+    jest.useRealTimers();
   });
 
   it('should start observing mutations upon initialization', async () => {
@@ -44,6 +46,10 @@ describe('BadgeManager', () => {
 
     const element = givenNotification(2);
 
+    await waitFor(() => {
+      expect(onUpdateMock).toHaveBeenCalledWith('2');
+    });
+
     element.remove();
 
     await waitFor(() => {
@@ -56,6 +62,10 @@ describe('BadgeManager', () => {
 
     const element = givenNotification(2);
 
+    await waitFor(() => {
+      expect(onUpdateMock).toHaveBeenCalledWith('2');
+    });
+
     element.setAttribute('aria-label', 'Chats');
 
     await waitFor(() => {
@@ -63,23 +73,22 @@ describe('BadgeManager', () => {
     });
   });
 
-  it('should ignore elements that do not match the unread pattern', async () => {
+  it('should ignore elements that do not match the unread pattern', () => {
+    givenNoNotification();
     const { onUpdateMock } = initializeBadgeManager();
 
-    givenNoNotification();
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith(null);
-    });
+    // Should be called with null since no valid badge exists
+    expect(onUpdateMock).toHaveBeenCalledWith(null);
   });
 
   it('should stop observing after destroy is called', async () => {
     const { onUpdateMock } = initializeBadgeManager();
-    onUpdateMock.mockClear(); // clear initial rendering
+    onUpdateMock.mockClear(); // clear initial callback call
 
     BadgeManager.destroy();
 
     givenNotification(1);
+
     await waitFor(() => {
       expect(onUpdateMock).not.toHaveBeenCalled();
     });

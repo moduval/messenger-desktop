@@ -6,7 +6,7 @@ export class BadgeManager {
   private static onUpdate: BadgeUpdateCallback | null = null;
   private static observer: MutationObserver | null = null;
   private static debounceTimer: number | null = null;
-  private static lastBadgeCount: string | null = null;
+  private static lastBadgeCount: string | null | undefined = undefined;
   private static readonly DEBOUNCE_DELAY = 500;
 
   static init(onUpdate: BadgeUpdateCallback): void {
@@ -31,7 +31,7 @@ export class BadgeManager {
       this.observer = null;
     }
     this.onUpdate = null;
-    this.lastBadgeCount = null;
+    this.lastBadgeCount = undefined;
   }
 
   private static setupObserver(): void {

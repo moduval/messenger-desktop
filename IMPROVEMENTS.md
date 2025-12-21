@@ -19,7 +19,6 @@ The messenger-desktop application has a solid foundation but requires significan
 
 ---
 
-
 ## Critical Issues (High Priority)
 
 ### Security Vulnerabilities
@@ -44,7 +43,6 @@ webPreferences: {
 **Testing required:** Verify that BadgeManager still works with sandbox enabled. If module resolution fails, use `contextBridge` to expose necessary APIs.
 
 ---
-
 
 ## Enhancement Opportunities (Lower Priority)
 
