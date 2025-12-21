@@ -173,42 +173,6 @@ v8CompileCache.setCacheDir(path.join(app.getPath('userData'), 'v8-cache'));
 
 ### Badge Detection Issues
 
-#### 18. Pattern Matching Fails with Internationalization
-
-- **File:** `src/preload.ts:4`
-- **Severity:** High
-- **Issue:** The regex pattern `"Chats · (\d+) unread"` is hardcoded in English. Non-English users won't get badge counts.
-- **Recommendation:**
-
-```typescript
-private static readonly UNREAD_PATTERNS = [
-  /Chats · (\d+) unread/,           // English
-  /Chats · (\d+) non lus/,          // French
-  /Chats · (\d+) no leídos/,        // Spanish
-  /Chats · (\d+) ungelesen/,        // German
-  /チャット · (\d+)件の未読/,        // Japanese
-  /(\d+)\s*unread/i,                 // Generic fallback
-];
-
-private static findUnreadCount(): string | null {
-  const candidates = document.querySelectorAll('[aria-label]');
-
-  for (const el of candidates) {
-    const ariaLabel = el.getAttribute('aria-label');
-    if (!ariaLabel) continue;
-
-    for (const pattern of this.UNREAD_PATTERNS) {
-      const match = ariaLabel.match(pattern);
-      if (match) {
-        return match[1];
-      }
-    }
-  }
-
-  return null;
-}
-```
-
 #### 19. Badge Detection Relies on Fragile Text Pattern
 
 - **File:** `src/preload.ts:4`

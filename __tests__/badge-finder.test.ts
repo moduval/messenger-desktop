@@ -12,6 +12,17 @@ describe('BadgeFinder', () => {
     document.body.removeChild(el);
   });
 
+  it('should find unread count from French aria-label', () => {
+    const el = document.createElement('div');
+    el.setAttribute('aria-label', 'Chats · 5 non lus');
+    document.body.appendChild(el);
+
+    const count = BadgeFinder.find(document);
+    expect(count).toBe('5');
+
+    document.body.removeChild(el);
+  });
+
   it('should return null if no unread count found', () => {
     const el = document.createElement('div');
     el.setAttribute('aria-label', 'Chats');
