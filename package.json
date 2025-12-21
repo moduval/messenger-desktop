@@ -10,7 +10,8 @@
     "test:e2e": "tsc && playwright test",
     "format": "prettier --write .",
     "build": "tsc && electron-builder",
-    "build:win": "tsc && electron-builder --win --x64"
+    "build:win": "tsc && electron-builder --win --x64",
+    "tsc": "tsc --noEmit"
   },
   "build": {
     "appId": "com.messenger.desktop",

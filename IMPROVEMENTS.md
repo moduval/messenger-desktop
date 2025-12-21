@@ -151,7 +151,6 @@ private static updateBadge(count: string | null): void {
 }
 ```
 
-
 #### 17. V8 Code Cache Not Properly Configured
 
 - **File:** `src/index.ts:1`
@@ -611,73 +610,6 @@ window.addEventListener('error', (event) => {
 ```
 
 ---
-
-### Type Safety Issues
-
-#### 32. Weak Type for IPC Badge Parameter
-
-- **File:** `src/services/ipc-handlers.ts:5`
-- **Severity:** Medium
-- **Issue:** The `count` parameter is untyped (implicitly `any`).
-- **Recommendation:**
-
-```typescript
-// Create types file: src/types/ipc.ts
-export interface BadgeUpdateMessage {
-  count: string | null;
-}
-
-export interface BadgeUpdateResponse {
-  success: boolean;
-  reason?: string;
-}
-
-// In ipc-handlers.ts:
-import { BadgeUpdateMessage, BadgeUpdateResponse } from '../types/ipc';
-
-ipcMain.handle(
-  'update-badge',
-  async (_event, message: BadgeUpdateMessage): Promise<BadgeUpdateResponse> => {
-    // ...
-  }
-);
-```
-
-#### 33. Missing Type Definitions for IPC Events
-
-- **File:** Multiple files
-- **Severity:** Medium
-- **Issue:** IPC send/receive operations lack type safety. Easy to mistype event names.
-- **Recommendation:**
-
-```typescript
-// src/types/ipc.ts
-export const IPC_CHANNELS = {
-  UPDATE_BADGE: 'update-badge',
-  RENDERER_ERROR: 'renderer-error',
-} as const;
-
-export type IpcChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];
-
-// Usage:
-ipcMain.handle(IPC_CHANNELS.UPDATE_BADGE, ...);
-ipcRenderer.invoke(IPC_CHANNELS.UPDATE_BADGE, ...);
-```
-
-#### 34. No Return Type Annotations
-
-- **File:** Multiple files
-- **Severity:** Low
-- **Issue:** Some methods lack explicit return types.
-- **Recommendation:**
-
-```typescript
-// Add explicit return types:
-static create(): BrowserWindow { ... }
-static register(): void { ... }
-static init(): void { ... }
-private static findUnreadCount(): string | null { ... }
-```
 
 ---
 

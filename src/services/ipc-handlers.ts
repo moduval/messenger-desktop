@@ -1,8 +1,9 @@
 import { app, ipcMain } from 'electron';
+import { IPC_CHANNELS } from '../types/ipc';
 
 export class IpcHandlers {
   static register(): void {
-    ipcMain.on('update-badge', (_event, count: unknown) => {
+    ipcMain.on(IPC_CHANNELS.UPDATE_BADGE, (_event, count: unknown) => {
       try {
         if (!this.isBadgeSupported(app.dock)) {
           return;
@@ -33,7 +34,9 @@ export class IpcHandlers {
     return process.platform === 'darwin' && !!dock;
   }
 
-  private static isValidBadgeCountType(count: unknown): boolean {
+  private static isValidBadgeCountType(
+    count: unknown
+  ): count is string | number | null | undefined {
     return (
       count === null ||
       count === undefined ||
