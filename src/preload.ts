@@ -12,3 +12,7 @@ window.addEventListener('DOMContentLoaded', () => {
     ipcRenderer.send('update-badge', count);
   });
 });
+
+window.addEventListener('beforeunload', () => {
+  BadgeManager.destroy();
+});

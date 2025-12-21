@@ -73,6 +73,18 @@ describe('BadgeManager', () => {
     });
   });
 
+  it('should stop observing after destroy is called', async () => {
+    const { onUpdateMock } = initializeBadgeManager();
+    onUpdateMock.mockClear(); // clear initial rendering
+
+    BadgeManager.destroy();
+
+    givenNotification(1);
+    await waitFor(() => {
+      expect(onUpdateMock).not.toHaveBeenCalled();
+    });
+  });
+
   function givenNotification(count: number) {
     const element = document.createElement('div');
     element.setAttribute('aria-label', `Chats · ${count} unread`);

@@ -151,40 +151,6 @@ private static updateBadge(count: string | null): void {
 }
 ```
 
-#### 16. MutationObserver Never Stopped
-
-- **File:** `src/preload.ts:6-15`
-- **Severity:** Medium
-- **Issue:** The observer is started but never stopped, even when the window closes. Memory leak.
-- **Recommendation:**
-
-```typescript
-private static observer: MutationObserver | null = null;
-
-static init(): void {
-  this.observer = new MutationObserver(() => {
-    // ... observer logic
-  });
-
-  this.observer.observe(document.body, { /* ... */ });
-
-  // Stop observer when window unloads
-  window.addEventListener('beforeunload', () => {
-    this.cleanup();
-  });
-}
-
-static cleanup(): void {
-  if (this.observer) {
-    this.observer.disconnect();
-    this.observer = null;
-  }
-  if (this.debounceTimer !== null) {
-    clearTimeout(this.debounceTimer);
-    this.debounceTimer = null;
-  }
-}
-```
 
 #### 17. V8 Code Cache Not Properly Configured
 
