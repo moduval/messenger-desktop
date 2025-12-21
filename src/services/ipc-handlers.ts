@@ -34,7 +34,12 @@ export class IpcHandlers {
   }
 
   private static isValidBadgeCountType(count: unknown): boolean {
-    return count === null || count === undefined || typeof count === 'string' || typeof count === 'number';
+    return (
+      count === null ||
+      count === undefined ||
+      typeof count === 'string' ||
+      typeof count === 'number'
+    );
   }
 
   private static isValidBadgeNumber(badgeString: string): boolean {

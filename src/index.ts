@@ -28,7 +28,10 @@ app.whenReady().then(() => {
     });
   } catch (error) {
     console.error('Failed to initialize app:', error);
-    dialog.showErrorBox('Startup Error', `Failed to start application: ${(error as Error).message}`);
+    dialog.showErrorBox(
+      'Startup Error',
+      `Failed to start application: ${(error as Error).message}`
+    );
     app.quit();
   }
 });

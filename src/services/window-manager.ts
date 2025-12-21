@@ -24,29 +24,31 @@ export class WindowManager {
         sandbox: true,
         nodeIntegration: false,
         contextIsolation: true,
-        preload: APP_CONFIG.PATHS.PRELOAD,
-      },
+        preload: APP_CONFIG.PATHS.PRELOAD
+      }
     });
 
     win.webContents.on('did-finish-load', () => {
       CssInjector.injectCleanUi(win.webContents);
     });
 
-    win.loadURL(APP_CONFIG.URLS.MESSENGER).catch(error => {
+    win.loadURL(APP_CONFIG.URLS.MESSENGER).catch((error) => {
       console.error('Failed to load Messenger:', error);
-      dialog.showMessageBox(win, {
-        type: 'error',
-        title: 'Connection Error',
-        message: 'Failed to load Messenger',
-        detail: 'Please check your internet connection and try again.',
-        buttons: ['Retry', 'Quit']
-      }).then(result => {
-        if (result.response === 0) {
-          win.loadURL(APP_CONFIG.URLS.MESSENGER);
-        } else {
-          app.quit();
-        }
-      });
+      dialog
+        .showMessageBox(win, {
+          type: 'error',
+          title: 'Connection Error',
+          message: 'Failed to load Messenger',
+          detail: 'Please check your internet connection and try again.',
+          buttons: ['Retry', 'Quit']
+        })
+        .then((result) => {
+          if (result.response === 0) {
+            win.loadURL(APP_CONFIG.URLS.MESSENGER);
+          } else {
+            app.quit();
+          }
+        });
     });
 
     this.setupWindowHandlers(win);
@@ -99,7 +101,7 @@ export class WindowManager {
     try {
       const urlObj = new URL(url);
       if (this.isValidExternalProtocol(urlObj.protocol)) {
-        shell.openExternal(url).catch(err => {
+        shell.openExternal(url).catch((err) => {
           console.error('Failed to open external URL:', err);
         });
       }

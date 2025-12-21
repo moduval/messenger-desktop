@@ -7,6 +7,6 @@ export default defineConfig({
   retries: 0,
   reporter: 'list',
   use: {
-    trace: 'on-first-retry',
-  },
+    trace: 'on-first-retry'
+  }
 });

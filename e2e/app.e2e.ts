@@ -4,7 +4,7 @@ import * as path from 'path';
 test.describe('Application Launch', () => {
   test('should launch the application and load Messenger', async () => {
     const electronApp = await electron.launch({
-      args: [path.join(__dirname, '..')],
+      args: [path.join(__dirname, '..')]
     });
 
     const window = await electronApp.firstWindow();

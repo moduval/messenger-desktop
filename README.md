@@ -8,7 +8,6 @@ A lightweight, native-feeling desktop wrapper for [Messenger.com](https://www.me
 - **Clean UI**: Automatically hides "Install App" banners and scrollbars for a clutter-free experience.
 - **Dock Badges**: Supports unread message count badges on the macOS Dock.
 
-
 ## Prerequisites
 
 - [Bun](https://bun.sh/)
@@ -55,7 +54,6 @@ The build artifacts will be stored in the `out/` and `dist/` directories (depend
 - `src/services/`: Core services (Window management, IPC).
 - `src/utils/`: Utility functions (CSS injection).
 - `src/preload.ts`: Preload script for secure IPC communication.
-
 
 ## Disclaimer
 
