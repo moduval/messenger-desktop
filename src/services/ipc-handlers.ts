@@ -3,6 +3,7 @@ import { IPC_CHANNELS } from '../types/ipc';
 import { APP_CONFIG } from '../config/constants';
 import { SplashScreen } from './splash-screen';
 import { ErrorUtils } from '../utils/error-utils';
+import { WindowsBadgeIconGenerator } from '../utils/windows-badge-icon-generator';
 
 export class IpcHandlers {
   static register(): void {
@@ -17,28 +18,61 @@ export class IpcHandlers {
 
   private static updateBadge(count: unknown) {
     try {
-      if (!this.isBadgeSupported(app.dock)) {
-        return;
-      }
-
       if (!this.isValidBadgeCountType(count)) {
         console.error('Invalid badge count type:', typeof count);
         return;
       }
 
-      if (count) {
-        const badgeString = String(count);
-        if (!this.isValidBadgeNumber(badgeString)) {
-          console.error('Invalid badge count value:', badgeString);
-          return;
-        }
-        app.dock.setBadge(badgeString);
-      } else {
-        app.dock.setBadge('');
+      if (process.platform === 'darwin') {
+        this.updateMacOSBadge(count);
+      } else if (process.platform === 'win32') {
+        this.updateWindowsBadge(count);
       }
     } catch (error) {
       console.error('Failed to update badge:', error);
     }
+  }
+
+  private static updateMacOSBadge(count: string | number | null | undefined) {
+    if (!this.isBadgeSupported(app.dock)) {
+      return;
+    }
+
+    if (!count) {
+      app.dock.setBadge('');
+      return;
+    }
+
+    const badgeString = String(count);
+    if (!this.isValidBadgeNumber(badgeString)) {
+      console.error('Invalid badge count value:', badgeString);
+      return;
+    }
+    app.dock.setBadge(badgeString);
+  }
+
+  private static updateWindowsBadge(count: string | number | null | undefined) {
+    const mainWindow = BrowserWindow.getAllWindows()[0];
+    if (!mainWindow) {
+      return;
+    }
+
+    if (!count) {
+      mainWindow.setOverlayIcon(null, '');
+      return;
+    }
+
+    const badgeString = String(count);
+    if (!this.isValidBadgeNumber(badgeString)) {
+      console.error('Invalid badge count value:', badgeString);
+      return;
+    }
+
+    const badgeCount = parseInt(badgeString, 10);
+    const badgeIcon = WindowsBadgeIconGenerator.createNumberedBadgeIcon(badgeCount);
+    const description = badgeCount === 1 ? '1 unread message' : `${badgeCount} unread messages`;
+
+    mainWindow.setOverlayIcon(badgeIcon, description);
   }
 
   private static reloadContent(event: Electron.IpcMainEvent) {
