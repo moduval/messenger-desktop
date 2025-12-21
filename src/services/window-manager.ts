@@ -2,6 +2,7 @@ import { BrowserWindow, shell, session, dialog, app, Tray, Menu, nativeImage } f
 import Store from 'electron-store';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
+import { SplashScreen } from './splash-screen';
 import * as fs from 'fs';
 
 interface WindowState {
@@ -40,11 +41,14 @@ export class WindowManager {
       isMaximized: false
     });
 
+    SplashScreen.show();
+
     const win = new BrowserWindow({
       width: savedState.width,
       height: savedState.height,
       x: savedState.x,
       y: savedState.y,
+      show: false, // Don't show until ready
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
         session: messengerSession,
@@ -58,6 +62,12 @@ export class WindowManager {
     if (savedState.isMaximized) {
       win.maximize();
     }
+
+    win.once('ready-to-show', () => {
+      SplashScreen.close();
+      win.show();
+      win.focus();
+    });
 
     win.webContents.on('did-finish-load', () => {
       CssInjector.injectCleanUi(win.webContents);
