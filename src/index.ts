@@ -3,6 +3,7 @@ import { app, BrowserWindow, dialog } from 'electron';
 import { WindowManager } from './services/window-manager';
 import { IpcHandlers } from './services/ipc-handlers';
 import { MenuManager } from './services/menu-manager';
+import { NotificationManager } from './services/notification-manager';
 import { APP_CONFIG } from './config/constants';
 import * as path from 'path';
 
@@ -10,7 +11,7 @@ enableHotReload();
 
 // Set app name before ready event
 if (process.platform === 'darwin') {
-  app.name = 'Messenger';
+  app.name = APP_CONFIG.APP.NAME;
 }
 
 app.whenReady().then(() => {
@@ -21,6 +22,7 @@ app.whenReady().then(() => {
 
     MenuManager.create();
     WindowManager.create();
+    NotificationManager.init(APP_CONFIG.APP.ID);
     IpcHandlers.register();
 
     app.on('activate', () => {

@@ -4,6 +4,8 @@ import { APP_CONFIG } from '../config/constants';
 import { SplashScreen } from './splash-screen';
 import { ErrorUtils } from '../utils/error-utils';
 import { WindowsBadgeIconGenerator } from '../utils/windows-badge-icon-generator';
+import { NotificationManager } from './notification-manager';
+import { NotificationData } from '../types/notification';
 
 export class IpcHandlers {
   static register(): void {
@@ -13,6 +15,10 @@ export class IpcHandlers {
 
     ipcMain.on(IPC_CHANNELS.UPDATE_BADGE, (_event, count: unknown) => {
       this.updateBadge(count);
+    });
+
+    ipcMain.on(IPC_CHANNELS.SHOW_NOTIFICATION, (_event, data: unknown) => {
+      this.showNotification(data);
     });
   }
 
@@ -75,6 +81,15 @@ export class IpcHandlers {
     mainWindow.setOverlayIcon(badgeIcon, description);
   }
 
+  private static showNotification(data: unknown): void {
+    if (!this.isValidNotificationData(data)) {
+      console.error('Invalid notification data:', data);
+      return;
+    }
+
+    NotificationManager.show(data);
+  }
+
   private static reloadContent(event: Electron.IpcMainEvent) {
     const browserWindow = BrowserWindow.fromWebContents(event.sender);
     if (!browserWindow) {
@@ -110,5 +125,18 @@ export class IpcHandlers {
   private static isValidBadgeNumber(badgeString: string): boolean {
     const num = parseInt(badgeString, 10);
     return !isNaN(num) && num >= 0 && num <= 9999;
+  }
+
+  private static isValidNotificationData(data: unknown): data is NotificationData {
+    return (
+      typeof data === 'object' &&
+      data !== null &&
+      'title' in data &&
+      typeof (data as Record<string, unknown>).title === 'string' &&
+      'body' in data &&
+      typeof (data as Record<string, unknown>).body === 'string' &&
+      'count' in data &&
+      typeof (data as Record<string, unknown>).count === 'number'
+    );
   }
 }

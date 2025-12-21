@@ -17,7 +17,7 @@
     "tsc": "tsc --noEmit"
   },
   "build": {
-    "appId": "com.messenger.desktop",
+    "appId": "com.arivest.messenger-desktop",
     "files": [
       "out/**/*",
       "assets/**/*",
