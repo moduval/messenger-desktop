@@ -62,6 +62,8 @@ Centralized configuration for window dimensions, URLs (messenger.com and allowed
   - TypeScript compiles from `src/` to `out/` directory
   - All dependencies inlined in bundled preload to work with sandbox mode
 - **Assets**: Icon and other assets live in `assets/` directory
+  - `icon.icns`: macOS application bundle icon (used by electron-builder) with multiple resolutions for proper dock scaling
+  - `icon.png`: Runtime window/dock icon and Windows application icon (512x512)
 - **Allowed Origins**: The app permits requests to *.messenger.com, *.facebook.com, and *.fbcdn.net
 - **Badge Detection**:
   - Uses MutationObserver with debouncing (500ms) for performance

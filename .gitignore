@@ -7,6 +7,9 @@
 /dist
 /out
 
+# Build artifacts
+assets/icon.iconset
+
 # Misc
 .DS_Store
 .env

@@ -25,7 +25,7 @@
     ],
     "mac": {
       "category": "public.app-category.social-networking",
-      "icon": "assets/icon.png",
+      "icon": "assets/icon.icns",
       "identity": null,
       "target": [
         "zip",
