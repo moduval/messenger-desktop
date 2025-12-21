@@ -24,20 +24,27 @@ The messenger-desktop application has a solid foundation but requires significan
 
 ### Security Vulnerabilities
 
-#### 1. Missing Content Security Policy (CSP)
+#### 1. Sandbox Mode Disabled
 
-- **File:** `src/services/window-manager.ts`
+- **File:** `src/services/window-manager.ts:76`
 - **Severity:** Critical
-- **Issue:** No CSP headers are set. Messenger's untrusted content could potentially execute arbitrary scripts.
+- **Issue:** `sandbox: false` removes OS-level process isolation for the renderer. This was disabled to fix preload script loading, but modern Electron supports preload scripts with sandbox enabled. Without sandboxing, a compromised renderer process has more access to system resources.
 - **Recommendation:**
 
 ```typescript
 webPreferences: {
-  contentSecurityPolicy: "default-src 'self' https://www.messenger.com https://*.fbcdn.net; script-src 'self' https://www.messenger.com";
+  session: messengerSession,
+  sandbox: true,  // Re-enable sandbox
+  nodeIntegration: false,
+  contextIsolation: true,
+  preload: APP_CONFIG.PATHS.PRELOAD
 }
 ```
 
+**Testing required:** Verify that BadgeManager still works with sandbox enabled. If module resolution fails, use `contextBridge` to expose necessary APIs.
+
 ---
+
 
 ## Enhancement Opportunities (Lower Priority)
 

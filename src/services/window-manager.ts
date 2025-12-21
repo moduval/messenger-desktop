@@ -76,7 +76,13 @@ export class WindowManager {
         sandbox: false,
         nodeIntegration: false,
         contextIsolation: true,
-        preload: APP_CONFIG.PATHS.PRELOAD
+        preload: APP_CONFIG.PATHS.PRELOAD,
+        webSecurity: true,
+        allowRunningInsecureContent: false,
+        disableDialogs: true,
+        enableRemoteModule: false,
+        navigateOnDragDrop: false,
+        disableBlinkFeatures: 'Auxclick'
       }
     });
 
@@ -173,7 +179,8 @@ export class WindowManager {
       const urlObj = new URL(url);
       const hostname = urlObj.hostname;
 
-      if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') {
+      if (urlObj.protocol !== 'https:') {
+        console.warn('Blocked non-HTTPS URL:', url);
         return false;
       }
 
@@ -220,7 +227,7 @@ export class WindowManager {
   }
 
   private static isValidExternalProtocol(protocol: string): boolean {
-    return protocol === 'http:' || protocol === 'https:';
+    return protocol === 'https:';
   }
 
   private static validatePreloadScript(): void {
