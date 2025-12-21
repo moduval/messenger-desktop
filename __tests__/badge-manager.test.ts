@@ -31,14 +31,8 @@ describe('BadgeManager', () => {
   it('should update count when existing badge count changes', async () => {
     const { onUpdateMock } = initializeBadgeManager();
 
-    const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Chats · 2 unread');
-    document.body.appendChild(el);
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('2');
-    });
-
-    el.setAttribute('aria-label', 'Chats · 3 unread');
+    const element = givenNotification(2);
+    element.setAttribute('aria-label', 'Chats · 3 unread');
 
     await waitFor(() => {
       expect(onUpdateMock).toHaveBeenLastCalledWith('3');
@@ -48,14 +42,9 @@ describe('BadgeManager', () => {
   it('should update to null when badge is removed', async () => {
     const { onUpdateMock } = initializeBadgeManager();
 
-    const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Chats · 2 unread');
-    document.body.appendChild(el);
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('2');
-    });
+    const element = givenNotification(2);
 
-    el.remove();
+    element.remove();
 
     await waitFor(() => {
       expect(onUpdateMock).toHaveBeenLastCalledWith(null);
@@ -65,15 +54,9 @@ describe('BadgeManager', () => {
   it('should update to null when badge text no longer matches pattern', async () => {
     const { onUpdateMock } = initializeBadgeManager();
 
-    const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Chats · 2 unread');
-    document.body.appendChild(el);
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('2');
-    });
+    const element = givenNotification(2);
 
-    // Change to something else
-    el.setAttribute('aria-label', 'Chats');
+    element.setAttribute('aria-label', 'Chats');
 
     await waitFor(() => {
       expect(onUpdateMock).toHaveBeenLastCalledWith(null);
@@ -83,22 +66,23 @@ describe('BadgeManager', () => {
   it('should ignore elements that do not match the unread pattern', async () => {
     const { onUpdateMock } = initializeBadgeManager();
 
-    const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Chats');
-    document.body.appendChild(el);
+    givenNoNotification();
 
     await waitFor(() => {
-      // Should be called with null (or not called if it was already null?
-      // BadgeManager calls updateBadge(count). updateBadge calls onUpdate(count).
-      // If count is null, it calls onUpdate(null).
-      // So it should be called with null.
       expect(onUpdateMock).toHaveBeenCalledWith(null);
     });
   });
 
   function givenNotification(count: number) {
+    const element = document.createElement('div');
+    element.setAttribute('aria-label', `Chats · ${count} unread`);
+    document.body.appendChild(element);
+    return element;
+  }
+
+  function givenNoNotification() {
     const el = document.createElement('div');
-    el.setAttribute('aria-label', `Chats · ${count} unread`);
+    el.setAttribute('aria-label', 'Chats');
     document.body.appendChild(el);
   }
 
