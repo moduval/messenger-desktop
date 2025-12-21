@@ -1,13 +1,32 @@
-import { BrowserWindow, shell, session, dialog, app } from 'electron';
+import { BrowserWindow, shell, session, dialog, app, Tray, Menu, nativeImage } from 'electron';
+import Store from 'electron-store';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
 import * as fs from 'fs';
+
+interface WindowState {
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+  isMaximized: boolean;
+}
+
+const store = new Store<{ windowState: WindowState }>();
+
+let isQuitting = false;
+
+app.on('before-quit', () => {
+  isQuitting = true;
+});
 
 export class WindowManager {
   private static instance: BrowserWindow | null = null;
 
   static create(): BrowserWindow {
-    if (this.instance) {
+    if (this.instance && !this.instance.isDestroyed()) {
+      this.instance.show();
+      this.instance.focus();
       return this.instance;
     }
 
@@ -15,9 +34,17 @@ export class WindowManager {
 
     const messengerSession = session.fromPartition('persist:messenger');
 
-    const win = new BrowserWindow({
+    const savedState = store.get('windowState', {
       width: APP_CONFIG.WINDOW.WIDTH,
       height: APP_CONFIG.WINDOW.HEIGHT,
+      isMaximized: false
+    });
+
+    const win = new BrowserWindow({
+      width: savedState.width,
+      height: savedState.height,
+      x: savedState.x,
+      y: savedState.y,
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
         session: messengerSession,
@@ -27,6 +54,10 @@ export class WindowManager {
         preload: APP_CONFIG.PATHS.PRELOAD
       }
     });
+
+    if (savedState.isMaximized) {
+      win.maximize();
+    }
 
     win.webContents.on('did-finish-load', () => {
       CssInjector.injectCleanUi(win.webContents);
@@ -53,12 +84,40 @@ export class WindowManager {
 
     this.setupWindowHandlers(win);
 
+    win.on('close', (event) => {
+      if (!isQuitting && process.platform !== 'darwin') {
+        event.preventDefault();
+        win.hide();
+      }
+      this.saveWindowState(win);
+    });
+
     win.on('closed', () => {
-      this.instance = null;
+      this.cleanup();
     });
 
     this.instance = win;
     return win;
+  }
+
+  private static saveWindowState(win: BrowserWindow): void {
+    if (!win.isDestroyed()) {
+      const bounds = win.getBounds();
+      store.set('windowState', {
+        width: bounds.width,
+        height: bounds.height,
+        x: bounds.x,
+        y: bounds.y,
+        isMaximized: win.isMaximized()
+      });
+    }
+  }
+
+  private static cleanup(): void {
+    if (this.instance && !this.instance.isDestroyed()) {
+      this.instance.removeAllListeners();
+      this.instance = null;
+    }
   }
 
   private static isAllowedUrl(url: string): boolean {

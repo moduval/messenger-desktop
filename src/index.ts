@@ -2,10 +2,16 @@ import 'v8-compile-cache';
 import { app, BrowserWindow, dialog } from 'electron';
 import { WindowManager } from './services/window-manager';
 import { IpcHandlers } from './services/ipc-handlers';
+import { MenuManager } from './services/menu-manager';
 import { APP_CONFIG } from './config/constants';
 import * as path from 'path';
 
 enableHotReload();
+
+// Set app name before ready event
+if (process.platform === 'darwin') {
+  app.name = 'Messenger';
+}
 
 app.whenReady().then(() => {
   try {
@@ -13,6 +19,7 @@ app.whenReady().then(() => {
       app.dock?.setIcon(APP_CONFIG.WINDOW.ICON_PATH);
     }
 
+    MenuManager.create();
     WindowManager.create();
     IpcHandlers.register();
 
@@ -34,6 +41,27 @@ app.whenReady().then(() => {
     );
     app.quit();
   }
+});
+
+app.on('render-process-gone', (_event, _webContents, details) => {
+  console.error('Renderer process crashed:', details);
+
+  dialog
+    .showMessageBox({
+      type: 'error',
+      title: 'Application Crashed',
+      message: 'The application has crashed',
+      detail: 'Would you like to restart?',
+      buttons: ['Restart', 'Quit']
+    })
+    .then((result) => {
+      if (result.response === 0) {
+        app.relaunch();
+        app.quit();
+      } else {
+        app.quit();
+      }
+    });
 });
 
 app.on('window-all-closed', () => {
