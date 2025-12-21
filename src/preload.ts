@@ -1,7 +1,7 @@
 import { ipcRenderer, contextBridge } from 'electron';
 import { BadgeManager } from './services/badge-manager';
 import { IPC_CHANNELS } from './types/ipc';
-import { NotificationData } from './types/notification';
+import { type NotificationData } from './types/notification';
 
 contextBridge.exposeInMainWorld('messengerApi', {
   updateBadge: (count: string | null) => {

@@ -75,6 +75,7 @@ app.on('window-all-closed', () => {
 function enableHotReload(): void {
   if (!app.isPackaged) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       require('electron-reload')(__dirname, {
         electron: path.join(__dirname, '..', 'node_modules', '.bin', 'electron'),
         forceHardReset: true,

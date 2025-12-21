@@ -1,5 +1,5 @@
 import { Notification, BrowserWindow, app } from 'electron';
-import { NotificationData, NotificationOptions } from '../types/notification';
+import { type NotificationData, type NotificationOptions } from '../types/notification';
 import { APP_CONFIG } from '../config/constants';
 
 export class NotificationManager {

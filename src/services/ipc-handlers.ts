@@ -5,7 +5,7 @@ import { SplashScreen } from './splash-screen';
 import { ErrorUtils } from '../utils/error-utils';
 import { WindowsBadgeIconGenerator } from '../utils/windows-badge-icon-generator';
 import { NotificationManager } from './notification-manager';
-import { NotificationData } from '../types/notification';
+import { type NotificationData } from '../types/notification';
 
 export class IpcHandlers {
   static register(): void {

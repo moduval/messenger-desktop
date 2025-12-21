@@ -1,4 +1,4 @@
-import { Menu, shell, app, MenuItemConstructorOptions } from 'electron';
+import { Menu, shell, app, type MenuItemConstructorOptions } from 'electron';
 
 export class MenuManager {
   static create(): void {

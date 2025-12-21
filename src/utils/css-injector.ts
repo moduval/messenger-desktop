@@ -1,4 +1,4 @@
-import { WebContents } from 'electron';
+import { type WebContents } from 'electron';
 
 export class CssInjector {
   static injectCleanUi(webContents: WebContents): void {

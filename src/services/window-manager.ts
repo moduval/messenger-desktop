@@ -1,4 +1,4 @@
-import { BrowserWindow, shell, session, dialog, app, Tray, Menu, nativeImage } from 'electron';
+import { BrowserWindow, shell, session, app } from 'electron';
 import Store from 'electron-store';
 import { APP_CONFIG } from '../config/constants';
 import { CssInjector } from '../utils/css-injector';
