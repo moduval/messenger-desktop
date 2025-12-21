@@ -491,7 +491,6 @@ ipcMain.on('show-notification', (_event, data) => {
 
 ### User Experience Improvements
 
-
 ---
 
 ### Configuration & Customization
