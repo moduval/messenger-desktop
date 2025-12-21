@@ -2,7 +2,7 @@
   "name": "Messenger",
   "author": "Alexandre Rivest",
   "version": "1.0.0",
-  "description": "A native desktop wrapper for Messenger.com with unread badge counts and enhanced security",
+  "description": "A native desktop wrapper for Messenger.com.",
   "main": "out/index.js",
   "scripts": {
     "clean": "rm -rf out dist",

@@ -12,11 +12,12 @@ This is an Electron-based desktop wrapper for Messenger.com. It provides a nativ
 
 - Install dependencies: `bun install`
 - Run development: `bun start` (bundles preload, compiles TypeScript, and launches Electron)
-- Build for current OS: `bun run build`
+- Build for current OS: `bun run build` (cleans, bundles, compiles, and builds)
 - Build for Windows: `bun run build:win`
+- Clean output directories: `bun run clean` (removes `out/` and `dist/`)
 - Bundle preload only: `bun run bundle:preload`
 
-**Note**: The `bun start` command runs `bun run bundle:preload && tsc && electron .`. The preload script must be bundled first to work with sandbox mode enabled.
+**Note**: The `bun start` command runs `bun run bundle:preload && tsc && electron .`. The preload script must be bundled first to work with sandbox mode enabled. Build commands automatically clean output directories to ensure fresh builds with the correct bundled preload script.
 
 ## Architecture
 
