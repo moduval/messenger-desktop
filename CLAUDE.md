@@ -11,11 +11,12 @@ This is an Electron-based desktop wrapper for Messenger.com. It provides a nativ
 **Package Manager**: This project uses Bun as its package manager, not npm or yarn.
 
 - Install dependencies: `bun install`
-- Run development: `bun start` (compiles TypeScript and launches Electron)
+- Run development: `bun start` (bundles preload, compiles TypeScript, and launches Electron)
 - Build for current OS: `bun run build`
 - Build for Windows: `bun run build:win`
+- Bundle preload only: `bun run bundle:preload`
 
-**Note**: The `bun start` command runs `tsc && electron .`, which compiles TypeScript to the `out/` directory before launching.
+**Note**: The `bun start` command runs `bun run bundle:preload && tsc && electron .`. The preload script must be bundled first to work with sandbox mode enabled.
 
 ## Architecture
 
@@ -36,7 +37,9 @@ Singleton pattern for managing the main BrowserWindow. Key responsibilities:
 
 **Main process** (ipc-handlers.ts): Registers the `update-badge` handler to update macOS dock badge count.
 
-**Preload script** (preload.ts): Runs in the renderer context with node access. The BadgeManager class uses MutationObserver to watch the DOM for unread count changes (pattern: "Chats · N unread") and sends updates to the main process via IPC.
+**Preload script** (preload.ts): Runs in the renderer context with contextBridge API. The BadgeManager class uses MutationObserver to watch the DOM for unread count changes (pattern: "Chats · N unread") and sends updates to the main process via IPC.
+
+**Important**: The preload script is bundled using esbuild (via `scripts/bundle-preload.js`) into a single file at `out/preload.js`. This bundling is required to work with sandbox mode enabled, as sandboxed preload scripts cannot use `require()` for local modules. Note that `src/preload.ts` is excluded from TypeScript compilation in `tsconfig.json` to prevent the bundled version from being overwritten.
 
 ### UI Customization (src/utils/css-injector.ts)
 
@@ -48,8 +51,18 @@ Centralized configuration for window dimensions, URLs (messenger.com and allowed
 
 ## Key Technical Details
 
-- **Security**: Uses `nodeIntegration: false` and `contextIsolation: true` in webPreferences
-- **Compilation**: TypeScript compiles from `src/` to `out/` directory
+- **Security**:
+  - Sandbox mode enabled (`sandbox: true`) for OS-level process isolation
+  - `nodeIntegration: false` and `contextIsolation: true` in webPreferences
+  - HTTPS-only enforcement for all navigation (no HTTP allowed)
+  - Additional hardening: `webSecurity: true`, `allowRunningInsecureContent: false`, `navigateOnDragDrop: false`, `disableBlinkFeatures: 'Auxclick'`
+- **Build Process**:
+  - Preload script bundled using esbuild (`scripts/bundle-preload.js`)
+  - TypeScript compiles from `src/` to `out/` directory
+  - All dependencies inlined in bundled preload to work with sandbox mode
 - **Assets**: Icon and other assets live in `assets/` directory
-- **Allowed Origins**: The app permits requests to _.messenger.com, _.facebook.com, and \*.fbcdn.net
-- **Badge Detection**: The preload script searches all DOM elements for aria-labels matching the unread count pattern
+- **Allowed Origins**: The app permits requests to *.messenger.com, *.facebook.com, and *.fbcdn.net
+- **Badge Detection**:
+  - Uses MutationObserver with debouncing (500ms) for performance
+  - Deduplication prevents redundant IPC messages
+  - Supports English ("Chats · N unread") and French ("Chats · N non lus") patterns

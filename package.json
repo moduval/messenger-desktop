@@ -1,16 +1,19 @@
 {
   "name": "Messenger",
+  "author": "Alexandre Rivest",
   "version": "1.0.0",
-  "description": "",
+  "description": "A native desktop wrapper for Messenger.com with unread badge counts and enhanced security",
   "main": "out/index.js",
   "scripts": {
-    "start": "tsc && electron .",
-    "dev": "concurrently \"tsc -w\" \"electron .\"",
+    "clean": "rm -rf out dist",
+    "bundle:preload": "node scripts/bundle-preload.js",
+    "start": "bun run bundle:preload && tsc && electron .",
+    "dev": "bun run bundle:preload && concurrently \"tsc -w\" \"electron .\"",
     "test": "jest",
-    "test:e2e": "tsc && playwright test",
+    "test:e2e": "bun run bundle:preload && tsc && playwright test",
     "format": "prettier --write .",
-    "build": "tsc && electron-builder",
-    "build:win": "tsc && electron-builder --win --x64",
+    "build": "bun run clean && bun run bundle:preload && tsc && electron-builder",
+    "build:win": "bun run clean && bun run bundle:preload && tsc && electron-builder --win --x64",
     "tsc": "tsc --noEmit"
   },
   "build": {
@@ -42,6 +45,7 @@
     "electron": "^39.2.7",
     "electron-builder": "^26.0.12",
     "electron-reload": "^2.0.0-alpha.1",
+    "esbuild": "^0.27.2",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
     "playwright": "^1.40.0",

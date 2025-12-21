@@ -10,37 +10,11 @@ This document contains a thorough analysis of improvement opportunities for the 
 
 The messenger-desktop application has a solid foundation but requires significant improvements in:
 
-- **Security** (3 critical vulnerabilities)
 - **Error Handling** (6 major gaps causing silent failures)
 - **Performance** (badge detection does full DOM scan on every mutation)
 - **Cross-platform Support** (badge detection only works on macOS)
 - **Testing** (zero test coverage)
 - **User Experience** (no settings, notifications, or state persistence)
-
----
-
-## Critical Issues (High Priority)
-
-### Security Vulnerabilities
-
-#### 1. Sandbox Mode Disabled
-
-- **File:** `src/services/window-manager.ts:76`
-- **Severity:** Critical
-- **Issue:** `sandbox: false` removes OS-level process isolation for the renderer. This was disabled to fix preload script loading, but modern Electron supports preload scripts with sandbox enabled. Without sandboxing, a compromised renderer process has more access to system resources.
-- **Recommendation:**
-
-```typescript
-webPreferences: {
-  session: messengerSession,
-  sandbox: true,  // Re-enable sandbox
-  nodeIntegration: false,
-  contextIsolation: true,
-  preload: APP_CONFIG.PATHS.PRELOAD
-}
-```
-
-**Testing required:** Verify that BadgeManager still works with sandbox enabled. If module resolution fails, use `contextBridge` to expose necessary APIs.
 
 ---
 
@@ -209,25 +183,3 @@ export const CSS_SELECTORS = {
 ipcMain.on(IPC_CHANNELS.UPDATE_BADGE, ...);
 const elements = document.querySelectorAll(CSS_SELECTORS.ARIA_LABEL);
 ```
-
-## Technical Notes & Known Issues
-
-### 1. Strict Content Security Policy (CSP) Failure
-
-**Attempted Fix:** Implemented a strict CSP to improve security.
-**Result:** The application failed to load, displaying a blank screen.
-**Root Cause:** Messenger.com requires loading resources from multiple domains (including CDNs and subdomains) and executing inline scripts that were blocked by the strict policy.
-**Lesson:** A more permissive CSP is required for Messenger, or we must carefully analyze all network requests to whitelist specific domains.
-
-### 2. Database Corruption & File Locks
-
-**Issue:** Users reported `Failed to delete the database: Database IO error`.
-**Root Cause:** Running the development version (`electron .`) while the packaged application (`messenger.app`) was running in the background caused a race condition. Both instances attempted to access the same `userData` directory (`~/Library/Application Support/messenger`), leading to file locks on the SQLite database.
-**Resolution:** Terminated all zombie processes to release the file locks.
-**Prevention:** Implement a "Single Instance Lock" check at the very beginning of the app startup (before app ready) to ensure only one instance runs per user data directory.
-
-### 3. Cache Clearing Limitations
-
-**Attempted Fix:** Used `session.defaultSession.clearCache()` to resolve database corruption.
-**Result:** While it logged the user out, it did not resolve the underlying file lock issue causing the IO error.
-**Lesson:** Programmatic cache clearing is insufficient for resolving OS-level file locking issues. Process management is required.

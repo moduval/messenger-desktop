@@ -73,14 +73,12 @@ export class WindowManager {
       icon: APP_CONFIG.WINDOW.ICON_PATH,
       webPreferences: {
         session: messengerSession,
-        sandbox: false,
+        sandbox: true,
         nodeIntegration: false,
         contextIsolation: true,
         preload: APP_CONFIG.PATHS.PRELOAD,
         webSecurity: true,
         allowRunningInsecureContent: false,
-        disableDialogs: true,
-        enableRemoteModule: false,
         navigateOnDragDrop: false,
         disableBlinkFeatures: 'Auxclick'
       }
