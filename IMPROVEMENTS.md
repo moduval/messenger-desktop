@@ -1,7 +1,7 @@
 # Messenger Desktop - Comprehensive Improvement Analysis
 
 **Date:** December 20, 2025
-**Total Issues Identified:** 72+
+**Total Issues Identified:** 70+
 **Categories:** 14
 
 This document contains a thorough analysis of improvement opportunities for the messenger-desktop application, organized by priority and category.
@@ -62,94 +62,7 @@ webPreferences: {
 
 ---
 
-### Error Handling Gaps
-
-#### 12. CSS Injection Without Error Handling
-
-- **File:** `src/utils/css-injector.ts:5`
-- **Severity:** Low
-- **Issue:** `webContents.insertCSS()` can fail but the promise rejection is ignored.
-- **Recommendation:**
-
-```typescript
-static injectCleanUi(webContents: WebContents): void {
-  webContents.insertCSS(`
-    /* Hide "Install Desktop App" banners if possible */
-    div[aria-label="Install desktop app"],
-    div[role="banner"] {
-      display: none !important;
-    }
-    /* Hide scrollbars for cleaner look */
-    ::-webkit-scrollbar {
-      display: none;
-    }
-  `).catch(error => {
-    console.error('Failed to inject CSS:', error);
-  });
-}
-```
-
----
-
 ### Performance Issues
-
-#### 14. No Debouncing of Badge Updates
-
-- **File:** `src/preload.ts:6-15`
-- **Severity:** High
-- **Issue:** MutationObserver fires on every DOM change. If the page updates 100 times per second, badge detection runs 100 times and sends 100 IPC messages.
-- **Recommendation:**
-
-```typescript
-private static debounceTimer: number | null = null;
-private static readonly DEBOUNCE_DELAY = 500; // ms
-
-static init(): void {
-  const observer = new MutationObserver(() => {
-    try {
-      // Clear existing timer
-      if (this.debounceTimer !== null) {
-        clearTimeout(this.debounceTimer);
-      }
-
-      // Set new timer
-      this.debounceTimer = window.setTimeout(() => {
-        this.checkUnreadCount();
-        this.debounceTimer = null;
-      }, this.DEBOUNCE_DELAY);
-    } catch (error) {
-      console.error('Badge detection error:', error);
-    }
-  });
-
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-    attributes: true,
-    attributeFilter: ['aria-label'],
-    characterData: true
-  });
-}
-```
-
-#### 15. No IPC Event Deduplication
-
-- **File:** `src/preload.ts:40-42`
-- **Severity:** Medium
-- **Issue:** If badge count doesn't change (stays at "5"), the same IPC message is sent repeatedly.
-- **Recommendation:**
-
-```typescript
-private static lastBadgeCount: string | null = null;
-
-private static updateBadge(count: string | null): void {
-  // Only send IPC if count actually changed
-  if (count !== this.lastBadgeCount) {
-    this.lastBadgeCount = count;
-    ipcRenderer.send('update-badge', count);
-  }
-}
-```
 
 #### 17. V8 Code Cache Not Properly Configured
 

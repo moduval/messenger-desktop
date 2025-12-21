@@ -5,6 +5,9 @@ export type BadgeUpdateCallback = (count: string | null) => void;
 export class BadgeManager {
   private static onUpdate: BadgeUpdateCallback | null = null;
   private static observer: MutationObserver | null = null;
+  private static debounceTimer: number | null = null;
+  private static lastBadgeCount: string | null = null;
+  private static readonly DEBOUNCE_DELAY = 500;
 
   static init(onUpdate: BadgeUpdateCallback): void {
     this.destroy();
@@ -18,11 +21,17 @@ export class BadgeManager {
   }
 
   static destroy(): void {
+    if (this.debounceTimer !== null) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
     this.onUpdate = null;
+    this.lastBadgeCount = null;
   }
 
   private static setupObserver(): void {
@@ -39,7 +48,14 @@ export class BadgeManager {
 
   private static handleMutation(): void {
     try {
-      this.checkUnreadCount();
+      if (this.debounceTimer !== null) {
+        clearTimeout(this.debounceTimer);
+      }
+
+      this.debounceTimer = window.setTimeout(() => {
+        this.checkUnreadCount();
+        this.debounceTimer = null;
+      }, this.DEBOUNCE_DELAY);
     } catch (error) {
       console.error('Badge detection error:', error);
     }
@@ -51,6 +67,11 @@ export class BadgeManager {
   }
 
   private static updateBadge(count: string | null): void {
+    if (count === this.lastBadgeCount) {
+      return;
+    }
+
+    this.lastBadgeCount = count;
     if (this.onUpdate) {
       this.onUpdate(count);
     }
