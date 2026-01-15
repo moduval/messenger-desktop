@@ -1,22 +1,29 @@
 describe('Badge Pattern Matching', () => {
-  // The regex used in src/preload.ts
-  const UNREAD_PATTERN = /Chats · (\d+) unread/;
+  // Page title patterns used in BadgeFinder
+  const PAGE_TITLE_PATTERN = /Messenger\s*\((\d+)\)/;
+  const PAGE_TITLE_ALT_PATTERN = /\((\d+)\)\s*Messenger/;
 
-  it('should extract unread count from aria-label', () => {
-    const text = 'Chats · 5 unread';
-    const match = text.match(UNREAD_PATTERN);
+  it('should extract unread count from page title "Messenger (5)"', () => {
+    const text = 'Messenger (5)';
+    const match = text.match(PAGE_TITLE_PATTERN);
+    expect(match?.[1]).toBe('5');
+  });
+
+  it('should extract unread count from page title "(5) Messenger"', () => {
+    const text = '(5) Messenger';
+    const match = text.match(PAGE_TITLE_ALT_PATTERN);
     expect(match?.[1]).toBe('5');
   });
 
   it('should return null for no unread messages', () => {
-    const text = 'Chats';
-    const match = text.match(UNREAD_PATTERN);
+    const text = 'Messenger';
+    const match = text.match(PAGE_TITLE_PATTERN);
     expect(match).toBeNull();
   });
 
   it('should handle large numbers', () => {
-    const text = 'Chats · 999 unread';
-    const match = text.match(UNREAD_PATTERN);
+    const text = 'Messenger (999)';
+    const match = text.match(PAGE_TITLE_PATTERN);
     expect(match?.[1]).toBe('999');
   });
 });

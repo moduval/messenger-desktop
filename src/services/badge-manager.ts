@@ -6,17 +6,39 @@ export class BadgeManager {
   private static onUpdate: BadgeUpdateCallback | null = null;
   private static observer: MutationObserver | null = null;
   private static debounceTimer: number | null = null;
+  private static initRetryTimer: number | null = null;
   private static lastBadgeCount: string | null | undefined = undefined;
   private static readonly DEBOUNCE_DELAY = 500;
+  private static readonly INIT_RETRY_DELAY = 1000;
+  private static readonly MAX_INIT_RETRIES = 10;
 
   static init(onUpdate: BadgeUpdateCallback): void {
     this.destroy();
     this.onUpdate = onUpdate;
     try {
       this.setupObserver();
-      this.checkUnreadCount();
+      this.startInitialCheck();
     } catch (error) {
       console.error('Failed to initialize badge observer:', error);
+    }
+  }
+
+  private static startInitialCheck(retryCount = 0): void {
+    const count = BadgeFinder.find(document);
+
+    if (count !== null) {
+      this.updateBadge(count);
+      return;
+    }
+
+    // No badge found yet - retry if we haven't exceeded max retries
+    if (retryCount < this.MAX_INIT_RETRIES) {
+      this.initRetryTimer = window.setTimeout(() => {
+        this.startInitialCheck(retryCount + 1);
+      }, this.INIT_RETRY_DELAY);
+    } else {
+      // Max retries reached, set badge to null (no unread)
+      this.updateBadge(null);
     }
   }
 
@@ -24,6 +46,11 @@ export class BadgeManager {
     if (this.debounceTimer !== null) {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
+    }
+
+    if (this.initRetryTimer !== null) {
+      clearTimeout(this.initRetryTimer);
+      this.initRetryTimer = null;
     }
 
     if (this.observer) {
