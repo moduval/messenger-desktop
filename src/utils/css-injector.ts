@@ -6,8 +6,7 @@ export class CssInjector {
       .insertCSS(
         `
           /* Hide "Install Desktop App" banners if possible */
-          div[aria-label="Install desktop app"],
-          div[role="banner"] {
+          div[aria-label="Install desktop app"] {
             display: none !important;
           }
           /* Hide scrollbars for cleaner look */

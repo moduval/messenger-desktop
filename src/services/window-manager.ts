@@ -49,7 +49,7 @@ export class WindowManager {
   }
 
   private static initializeSession(): Electron.Session {
-    return session.fromPartition('persist:messenger');
+    return session.fromPartition('persist:facebook');
   }
 
   private static getWindowState(): WindowState {
@@ -182,7 +182,8 @@ export class WindowManager {
         return false;
       }
 
-      return hostname === 'www.facebook.com'
+      return hostname === 'facebook.com'
+        || hostname === 'www.facebook.com'
         || hostname.endsWith('.facebook.com')
         || hostname.endsWith('.fbcdn.net');
     } catch (err) {
@@ -196,6 +197,7 @@ export class WindowManager {
   ) {
     browserWindow.webContents.on('will-navigate', (event, url) => {
       if (!this.isAllowedUrl(url)) {
+        console.warn('Blocked navigation:', url);
         event.preventDefault();
         this.handleExternalLink(url);
       }
@@ -208,6 +210,7 @@ export class WindowManager {
         return { action: 'allow' };
       }
 
+      console.warn('Blocked popup:', url);
       this.handleExternalLink(url);
       return { action: 'deny' };
     });
