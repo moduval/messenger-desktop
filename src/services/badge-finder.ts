@@ -17,7 +17,7 @@ export class BadgeFinder {
     const dots = doc.querySelectorAll('span[data-visualcompletion="ignore"]');
     let dotCount = 0;
     for (const el of dots) {
-      const bg = (el as HTMLElement).style?.backgroundColor;
+      const bg = getComputedStyle(el as HTMLElement).backgroundColor;
       if (bg === 'rgb(0, 100, 209)') {
         dotCount++;
       }

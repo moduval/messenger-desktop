@@ -1,97 +1,101 @@
 import { BadgeFinder } from '../src/services/badge-finder';
 
 describe('BadgeFinder', () => {
-  let originalTitle: string;
-
-  beforeEach(() => {
-    originalTitle = document.title;
-  });
-
   afterEach(() => {
-    document.title = originalTitle;
+    document.body.innerHTML = '';
   });
 
-  describe('page title detection', () => {
-    it('should find unread count from page title "Messenger (5)"', () => {
-      document.title = 'Messenger (5)';
-      const count = BadgeFinder.find(document);
-      expect(count).toBe('5');
-    });
-
-    it('should find unread count from page title "(5) Messenger"', () => {
-      document.title = '(5) Messenger';
-      const count = BadgeFinder.find(document);
-      expect(count).toBe('5');
-    });
-
-    it('should return null for page title without count', () => {
-      document.title = 'Messenger';
-      const count = BadgeFinder.find(document);
-      expect(count).toBeNull();
-    });
-  });
-
-  describe('aria-label detection', () => {
-    it('should find unread count from English aria-label', () => {
-      document.title = 'Messenger';
+  describe('primary strategy ([aria-live] / [role="status"])', () => {
+    it('counts [aria-live] element with "Unread message" text', () => {
       const el = document.createElement('div');
-      el.setAttribute('aria-label', 'Chats · 5 unread');
+      el.setAttribute('aria-live', 'polite');
+      el.textContent = 'Unread message';
       document.body.appendChild(el);
 
-      const count = BadgeFinder.find(document);
-      expect(count).toBe('5');
-
-      document.body.removeChild(el);
+      expect(BadgeFinder.find(document)).toBe('1');
     });
 
-    it('should find unread count from French aria-label with Chats', () => {
-      document.title = 'Messenger';
+    it('counts [role="status"] element with "Unread message" text', () => {
       const el = document.createElement('div');
-      el.setAttribute('aria-label', 'Chats · 5 non lus');
+      el.setAttribute('role', 'status');
+      el.textContent = 'Unread message';
       document.body.appendChild(el);
 
-      const count = BadgeFinder.find(document);
-      expect(count).toBe('5');
-
-      document.body.removeChild(el);
+      expect(BadgeFinder.find(document)).toBe('1');
     });
 
-    it('should find unread count from French aria-label with Discussions', () => {
-      document.title = 'Messenger';
+    it('counts "Message non lu" (French)', () => {
       const el = document.createElement('div');
-      el.setAttribute('aria-label', 'Discussions · 5 non lus');
+      el.setAttribute('aria-live', 'polite');
+      el.textContent = 'Message non lu';
       document.body.appendChild(el);
 
-      const count = BadgeFinder.find(document);
-      expect(count).toBe('5');
+      expect(BadgeFinder.find(document)).toBe('1');
+    });
 
-      document.body.removeChild(el);
+    it('counts multiple matching elements', () => {
+      for (let i = 0; i < 3; i++) {
+        const el = document.createElement('div');
+        el.setAttribute('aria-live', 'polite');
+        el.textContent = 'Unread message';
+        document.body.appendChild(el);
+      }
+
+      expect(BadgeFinder.find(document)).toBe('3');
+    });
+
+    it('ignores [aria-live] elements without matching text', () => {
+      const el = document.createElement('div');
+      el.setAttribute('aria-live', 'polite');
+      el.textContent = 'Some other notification';
+      document.body.appendChild(el);
+
+      expect(BadgeFinder.find(document)).toBeNull();
     });
   });
 
-  describe('edge cases', () => {
-    it('should return null if no unread count found', () => {
-      document.title = 'Messenger';
-      const el = document.createElement('div');
-      el.setAttribute('aria-label', 'Chats');
-      document.body.appendChild(el);
+  describe('fallback strategy (blue dot indicators)', () => {
+    it('counts span[data-visualcompletion="ignore"] with blue background', () => {
+      const span = document.createElement('span');
+      span.setAttribute('data-visualcompletion', 'ignore');
+      span.style.backgroundColor = 'rgb(0, 100, 209)';
+      document.body.appendChild(span);
 
-      const count = BadgeFinder.find(document);
-      expect(count).toBeNull();
-
-      document.body.removeChild(el);
+      expect(BadgeFinder.find(document)).toBe('1');
     });
 
-    it('should ignore elements without aria-label', () => {
-      document.title = 'Messenger';
-      const el = document.createElement('div');
-      el.textContent = 'Chats · 5 unread';
-      document.body.appendChild(el);
+    it('counts multiple blue dot spans', () => {
+      for (let i = 0; i < 2; i++) {
+        const span = document.createElement('span');
+        span.setAttribute('data-visualcompletion', 'ignore');
+        span.style.backgroundColor = 'rgb(0, 100, 209)';
+        document.body.appendChild(span);
+      }
 
-      const count = BadgeFinder.find(document);
-      expect(count).toBeNull();
+      expect(BadgeFinder.find(document)).toBe('2');
+    });
 
-      document.body.removeChild(el);
+    it('ignores spans with a different background color', () => {
+      const span = document.createElement('span');
+      span.setAttribute('data-visualcompletion', 'ignore');
+      span.style.backgroundColor = 'rgb(255, 0, 0)';
+      document.body.appendChild(span);
+
+      expect(BadgeFinder.find(document)).toBeNull();
+    });
+
+    it('ignores spans without data-visualcompletion attribute', () => {
+      const span = document.createElement('span');
+      span.style.backgroundColor = 'rgb(0, 100, 209)';
+      document.body.appendChild(span);
+
+      expect(BadgeFinder.find(document)).toBeNull();
+    });
+  });
+
+  describe('no indicators', () => {
+    it('returns null when document is empty', () => {
+      expect(BadgeFinder.find(document)).toBeNull();
     });
   });
 });

@@ -1,10 +1,12 @@
 import { BadgeManager } from '../src/services/badge-manager';
-import { waitFor } from '@testing-library/dom';
 
 describe('BadgeManager', () => {
+  let onUpdateMock: jest.Mock;
+
   beforeEach(() => {
     document.body.innerHTML = '';
     jest.useFakeTimers();
+    onUpdateMock = jest.fn();
   });
 
   afterEach(() => {
@@ -13,105 +15,92 @@ describe('BadgeManager', () => {
     jest.useRealTimers();
   });
 
-  it('should start observing mutations upon initialization', async () => {
-    const { onUpdateMock } = initializeBadgeManager();
+  function addContainer(): HTMLElement {
+    const container = document.createElement('ul');
+    container.setAttribute('role', 'list');
+    document.body.appendChild(container);
+    return container;
+  }
 
-    givenNotification(1);
+  function addUnreadElement(parent: HTMLElement, text = 'Unread message'): HTMLElement {
+    const el = document.createElement('div');
+    el.setAttribute('aria-live', 'polite');
+    el.textContent = text;
+    parent.appendChild(el);
+    return el;
+  }
 
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('1');
-    });
+  it('does not call onUpdate before the container is found', () => {
+    BadgeManager.init(onUpdateMock);
+
+    expect(onUpdateMock).not.toHaveBeenCalled();
   });
 
-  it('should detect existing badge count immediately upon initialization', () => {
-    givenNotification(5);
-    const { onUpdateMock } = initializeBadgeManager();
+  it('runs initial check (null) when container is found', () => {
+    addContainer();
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000);
 
-    expect(onUpdateMock).toHaveBeenCalledWith('5');
-  });
-
-  it('should update count when existing badge count changes', async () => {
-    const { onUpdateMock } = initializeBadgeManager();
-
-    const element = givenNotification(2);
-    element.setAttribute('aria-label', 'Chats · 3 unread');
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenLastCalledWith('3');
-    });
-  });
-
-  it('should update to null when badge is removed', async () => {
-    const { onUpdateMock } = initializeBadgeManager();
-
-    const element = givenNotification(2);
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('2');
-    });
-
-    element.remove();
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenLastCalledWith(null);
-    });
-  });
-
-  it('should update to null when badge text no longer matches pattern', async () => {
-    const { onUpdateMock } = initializeBadgeManager();
-
-    const element = givenNotification(2);
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenCalledWith('2');
-    });
-
-    element.setAttribute('aria-label', 'Chats');
-
-    await waitFor(() => {
-      expect(onUpdateMock).toHaveBeenLastCalledWith(null);
-    });
-  });
-
-  it('should ignore elements that do not match the unread pattern', () => {
-    givenNoNotification();
-    const { onUpdateMock } = initializeBadgeManager();
-
-    // Should be called with null since no valid badge exists
     expect(onUpdateMock).toHaveBeenCalledWith(null);
   });
 
-  it('should stop observing after destroy is called', async () => {
-    const { onUpdateMock } = initializeBadgeManager();
-    onUpdateMock.mockClear(); // clear initial callback call
+  it('detects existing unread count when container appears', () => {
+    const container = addContainer();
+    addUnreadElement(container);
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000);
+
+    expect(onUpdateMock).toHaveBeenCalledWith('1');
+  });
+
+  it('detects mutations within the container after debounce', async () => {
+    const container = addContainer();
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000); // attach observer + initial check
+    onUpdateMock.mockClear();
+
+    addUnreadElement(container);
+    await Promise.resolve(); // flush MutationObserver microtask → debounce timer set
+    jest.advanceTimersByTime(500); // fire debounce
+
+    expect(onUpdateMock).toHaveBeenCalledWith('1');
+  });
+
+  it('safety-net poll catches missed mutations', () => {
+    const container = addContainer();
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000); // attach + initial null
+    onUpdateMock.mockClear();
+
+    addUnreadElement(container);
+    jest.advanceTimersByTime(5000); // safety poll fires at 5s
+
+    expect(onUpdateMock).toHaveBeenCalledWith('1');
+  });
+
+  it('deduplicates: does not call onUpdate when count is unchanged', () => {
+    const container = addContainer();
+    addUnreadElement(container);
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000); // attach + initial '1'
+    expect(onUpdateMock).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(5000); // safety poll: still '1'
+    expect(onUpdateMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('stops observing and polling after destroy', async () => {
+    const container = addContainer();
+    BadgeManager.init(onUpdateMock);
+    jest.advanceTimersByTime(1000);
+    onUpdateMock.mockClear();
 
     BadgeManager.destroy();
 
-    givenNotification(1);
+    addUnreadElement(container);
+    await Promise.resolve();
+    jest.advanceTimersByTime(5000);
 
-    await waitFor(() => {
-      expect(onUpdateMock).not.toHaveBeenCalled();
-    });
+    expect(onUpdateMock).not.toHaveBeenCalled();
   });
-
-  function givenNotification(count: number) {
-    const element = document.createElement('div');
-    element.setAttribute('aria-label', `Chats · ${count} unread`);
-    document.body.appendChild(element);
-    return element;
-  }
-
-  function givenNoNotification() {
-    const el = document.createElement('div');
-    el.setAttribute('aria-label', 'Chats');
-    document.body.appendChild(el);
-  }
-
-  function initializeBadgeManager() {
-    const onUpdateMock = jest.fn();
-
-    BadgeManager.init(onUpdateMock);
-
-    return { onUpdateMock };
-  }
 });
