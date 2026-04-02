@@ -5,9 +5,23 @@ export class CssInjector {
     webContents
       .insertCSS(
         `
-          /* Hide "Install Desktop App" banners if possible */
+          /* Hide "Install Desktop App" banners */
           div[aria-label="Install desktop app"] {
             display: none !important;
+          }
+          /* Hide Facebook top navigation bar */
+          div[role="banner"],
+          div[aria-label="Facebook"] {
+            display: none !important;
+          }
+          /* Remove top padding that compensated for the fixed navbar */
+          body {
+            padding-top: 0 !important;
+          }
+          /* Zero out the header height variable on every element so class-level
+             overrides (e.g. .x85a59c { --header-height: 56px }) cannot win */
+          * {
+            --header-height: 0px !important;
           }
           /* Hide scrollbars for cleaner look */
           ::-webkit-scrollbar {
