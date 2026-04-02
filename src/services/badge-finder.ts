@@ -1,60 +1,28 @@
 export class BadgeFinder {
-  private static readonly UNREAD_PATTERNS = [
-    // Page title patterns
-    /Messenger\s*\((\d+)\)/, // "Messenger (5)" or "Messenger(5)"
-    /\((\d+)\)\s*Messenger/, // "(5) Messenger"
-    // English variations
-    /Chats\s*[·•]\s*(\d+)\s*unread/i,
-    /(\d+)\s*unread/i,
-    // French variations
-    /Discussions\s*[·•]\s*(\d+)\s*non\s*lus?/i,
-    /Chats\s*[·•]\s*(\d+)\s*non\s*lus?/i,
-    /(\d+)\s*non\s*lus?/i,
-    /(\d+)\s*message[s]?\s*non\s*lus?/i
-  ];
-
   static find(doc: Document): string | null {
-    // First check the page title - Messenger often shows "(5) Messenger" or "Messenger (5)"
-    const pageTitle = doc.title;
-    if (pageTitle) {
-      const titleCount = this.extractCount(pageTitle);
-      if (titleCount) {
-        return titleCount;
+    // Primary: count aria-live / role="status" elements whose text signals an unread message
+    const liveElements = doc.querySelectorAll('[aria-live], [role="status"]');
+    let count = 0;
+    for (const el of liveElements) {
+      if (/Unread message|Message non lu/i.test(el.textContent ?? '')) {
+        count++;
       }
     }
 
-    // Check aria-labels
-    const ariaElements = doc.querySelectorAll('[aria-label]');
-    for (const el of ariaElements) {
-      const ariaLabel = el.getAttribute('aria-label');
-      if (!ariaLabel) continue;
+    if (count > 0) {
+      return String(count);
+    }
 
-      const count = this.extractCount(ariaLabel);
-      if (count) {
-        return count;
+    // Fallback: blue dot indicators (Facebook unread dots use rgb(0, 100, 209))
+    const dots = doc.querySelectorAll('span[data-visualcompletion="ignore"]');
+    let dotCount = 0;
+    for (const el of dots) {
+      const bg = (el as HTMLElement).style?.backgroundColor;
+      if (bg === 'rgb(0, 100, 209)') {
+        dotCount++;
       }
     }
 
-    // Check title attributes (tooltips)
-    const titleElements = doc.querySelectorAll('[title]');
-    for (const el of titleElements) {
-      const title = el.getAttribute('title');
-      if (!title) continue;
-
-      const count = this.extractCount(title);
-      if (count) {
-        return count;
-      }
-    }
-
-    return null;
-  }
-
-  private static extractCount(ariaLabel: string): string | null {
-    const match = this.UNREAD_PATTERNS.map((pattern) => ariaLabel.match(pattern)).find(
-      (match) => match !== null
-    );
-
-    return match ? match[1] : null;
+    return dotCount > 0 ? String(dotCount) : null;
   }
 }

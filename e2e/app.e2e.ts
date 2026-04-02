@@ -12,11 +12,11 @@ test.describe('Application Launch', () => {
 
     const title = await window.title();
     console.log(`Window title: ${title}`);
-    expect(title).toContain('Messenger');
+    expect(title).toMatch(/Messenger|Messages|Facebook/);
 
     const url = window.url();
     console.log(`Window URL: ${url}`);
-    expect(url).toContain('messenger.com');
+    expect(url).toContain('facebook.com/messages');
 
     await electronApp.close();
   });

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is an Electron-based desktop wrapper for Messenger.com. It provides a native desktop experience with features like unread message count badges (macOS), automatic UI cleanup (hiding banners and scrollbars), and proper external link handling.
+This is an Electron-based desktop wrapper for facebook.com/messages. It provides a native desktop experience with features like unread message count badges (macOS), automatic UI cleanup (hiding banners and scrollbars), and proper external link handling.
 
 ## Development Commands
 
@@ -30,15 +30,15 @@ The entry point that initializes the Electron app. Uses `v8-compile-cache` for f
 Singleton pattern for managing the main BrowserWindow. Key responsibilities:
 
 - Creates window with contextIsolation and preload script
-- Loads messenger.com
-- Handles external links: opens messenger.com links in-app, other URLs in system browser
+- Loads facebook.com/messages
+- Handles external links: opens facebook.com links in-app, other URLs in system browser
 - Injects CSS after page loads via CssInjector
 
 ### IPC Communication (src/services/ipc-handlers.ts & src/preload.ts)
 
 **Main process** (ipc-handlers.ts): Registers the `update-badge` handler to update macOS dock badge count.
 
-**Preload script** (preload.ts): Runs in the renderer context with contextBridge API. The BadgeManager class uses MutationObserver to watch the DOM for unread count changes (pattern: "Chats · N unread") and sends updates to the main process via IPC.
+**Preload script** (preload.ts): Runs in the renderer context with contextBridge API. Initializes BadgeManager 3s after DOMContentLoaded (to allow Facebook's async hydration) and sends badge updates to the main process via IPC.
 
 **Important**: The preload script is bundled using esbuild (via `scripts/bundle-preload.js`) into a single file at `out/preload.js`. This bundling is required to work with sandbox mode enabled, as sandboxed preload scripts cannot use `require()` for local modules. Note that `src/preload.ts` is excluded from TypeScript compilation in `tsconfig.json` to prevent the bundled version from being overwritten.
 
@@ -48,7 +48,7 @@ Injects CSS to hide "Install Desktop App" banners and scrollbars for a cleaner n
 
 ### Configuration (src/config/constants.ts)
 
-Centralized configuration for window dimensions, URLs (messenger.com and allowed origins for Facebook CDN), and file paths. All path references use `__dirname` relative paths to work correctly in the compiled output.
+Centralized configuration for window dimensions, URLs (facebook.com/messages and allowed origins for Facebook CDN), and file paths. All path references use `__dirname` relative paths to work correctly in the compiled output.
 
 ## Key Technical Details
 
@@ -64,8 +64,10 @@ Centralized configuration for window dimensions, URLs (messenger.com and allowed
 - **Assets**: Icon and other assets live in `assets/` directory
   - `icon.icns`: macOS application bundle icon (used by electron-builder) with multiple resolutions for proper dock scaling
   - `icon.png`: Runtime window/dock icon and Windows application icon (512x512)
-- **Allowed Origins**: The app permits requests to *.messenger.com, *.facebook.com, and *.fbcdn.net
+- **Allowed Origins**: The app permits requests to *.facebook.com and *.fbcdn.net
 - **Badge Detection**:
-  - Uses MutationObserver with debouncing (500ms) for performance
-  - Deduplication prevents redundant IPC messages
-  - Supports English ("Chats · N unread") and French ("Chats · N non lus") patterns
+  - Lazy-attaches MutationObserver to the conversation list container (`[role="list"]` or `[role="grid"]`) once it appears
+  - Safety-net poll every 5s catches missed mutations
+  - Primary: counts `[aria-live]`/`[role="status"]` elements whose text matches "Unread message" or "Message non lu"
+  - Fallback: counts blue dot indicators (`span[data-visualcompletion="ignore"]` with `backgroundColor === 'rgb(0, 100, 209)')`)
+  - Debouncing (500ms) and deduplication prevent redundant IPC messages

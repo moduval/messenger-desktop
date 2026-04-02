@@ -7,42 +7,57 @@ export class BadgeManager {
   private static observer: MutationObserver | null = null;
   private static debounceTimer: number | null = null;
   private static lastBadgeCount: string | null | undefined = undefined;
+  private static pollInterval: number | null = null;
+  private static attachInterval: number | null = null;
   private static readonly DEBOUNCE_DELAY = 500;
 
   static init(onUpdate: BadgeUpdateCallback): void {
     this.destroy();
     this.onUpdate = onUpdate;
-    try {
-      this.setupObserver();
-      this.checkUnreadCount();
-    } catch (error) {
-      console.error('Failed to initialize badge observer:', error);
-    }
+    this.startLazyAttach();
+    // Safety net: poll every 5s to catch missed mutations
+    this.pollInterval = window.setInterval(() => this.checkUnreadCount(), 5000);
   }
-
 
   static destroy(): void {
     if (this.debounceTimer !== null) {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+    if (this.pollInterval !== null) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+    if (this.attachInterval !== null) {
+      clearInterval(this.attachInterval);
+      this.attachInterval = null;
     }
     this.onUpdate = null;
     this.lastBadgeCount = undefined;
   }
 
-  private static setupObserver(): void {
-    this.observer = new MutationObserver(() => this.handleMutation());
+  private static startLazyAttach(): void {
+    // Poll every 1s until the conversation list container is available
+    this.attachInterval = window.setInterval(() => {
+      const container = document.querySelector('[role="list"], [role="grid"]');
+      if (container) {
+        clearInterval(this.attachInterval!);
+        this.attachInterval = null;
+        this.setupObserver(container);
+        this.checkUnreadCount();
+      }
+    }, 1000);
+  }
 
-    this.observer.observe(document.body, {
+  private static setupObserver(container: Element): void {
+    this.observer = new MutationObserver(() => this.handleMutation());
+    this.observer.observe(container, {
       childList: true,
       subtree: true,
-      attributes: true,
-      attributeFilter: ['aria-label'],
       characterData: true
     });
   }
@@ -52,7 +67,6 @@ export class BadgeManager {
       if (this.debounceTimer !== null) {
         clearTimeout(this.debounceTimer);
       }
-
       this.debounceTimer = window.setTimeout(() => {
         this.checkUnreadCount();
         this.debounceTimer = null;
@@ -71,7 +85,6 @@ export class BadgeManager {
     if (count === this.lastBadgeCount) {
       return;
     }
-
     this.lastBadgeCount = count;
     if (this.onUpdate) {
       this.onUpdate(count);

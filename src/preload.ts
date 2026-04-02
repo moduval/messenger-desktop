@@ -35,15 +35,17 @@ function sendNewMessageNotification(currentCount: number): void {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (!window.location.href.includes('messenger.com')) {
+  if (!window.location.href.includes('facebook.com')) {
     return;
   }
 
-  try {
-    BadgeManager.init(handleBadgeUpdate);
-  } catch (error) {
-    console.error('Failed to initialize BadgeManager:', error);
-  }
+  setTimeout(() => {
+    try {
+      BadgeManager.init(handleBadgeUpdate);
+    } catch (error) {
+      console.error('Failed to initialize BadgeManager:', error);
+    }
+  }, 3000);
 });
 
 window.addEventListener('beforeunload', () => {

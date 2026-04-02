@@ -11,7 +11,7 @@ export const APP_CONFIG = {
     ICON_PATH: path.join(__dirname, '../../assets/icon.png')
   },
   URLS: {
-    MESSENGER: 'https://www.messenger.com/'
+    MESSENGER: 'https://www.facebook.com/messages/'
   },
   PATHS: {
     PRELOAD: path.join(__dirname, '../preload.js'),

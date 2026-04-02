@@ -182,7 +182,9 @@ export class WindowManager {
         return false;
       }
 
-      return hostname === 'www.messenger.com' || hostname.endsWith('.messenger.com');
+      return hostname === 'www.facebook.com'
+        || hostname.endsWith('.facebook.com')
+        || hostname.endsWith('.fbcdn.net');
     } catch (err) {
       console.error('Invalid URL:', url, err);
       return false;
